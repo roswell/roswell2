@@ -1,0 +1,60 @@
+diff --git a/src/code/toplevel.lisp b/src/code/toplevel.lisp
+index a8903b2..8d8f011 100644
+--- a/src/code/toplevel.lisp
++++ b/src/code/toplevel.lisp
+@@ -404,7 +404,7 @@ any non-negative real number."
+ 
+ 
+ (defvar *runtime-options*
+-  #("--noinform" "--core" "--help" "--version" "--dynamic-space-size"
++  #("--noinform" "--core" "--sbcl-help" "--sbcl-version" "--dynamic-space-size"
+     "--control-stack-size" "--tls"
+     "--debug-environment" "--disable-ldb" "--lose-on-corruption"
+     "--end-runtime-options" "--merge-core-pages" "--no-merge-core-pages"))
+diff --git a/src/runtime/Config.arm64-linux b/src/runtime/Config.arm64-linux
+index a073f68..7875a6a 100644
+--- a/src/runtime/Config.arm64-linux
++++ b/src/runtime/Config.arm64-linux
+@@ -35,3 +35,8 @@ LINKFLAGS += -Wl,--export-dynamic
+ # Nothing to do for after-grovel-headers.
+ .PHONY: after-grovel-headers
+ after-grovel-headers:
++
++ifdef LISP_FEATURE_SB_LINKABLE_RUNTIME
++  LIBSBCL = sbcl.o
++  USE_LIBSBCL = sbcl.o
++endif
+diff --git a/src/runtime/runtime.c b/src/runtime/runtime.c
+index 18a7759..808ed6c 100644
+--- a/src/runtime/runtime.c
++++ b/src/runtime/runtime.c
+@@ -147,8 +147,8 @@ print_help()
+     puts(
+ "Usage: sbcl [runtime-options] [toplevel-options] [user-options]\n\
+ Common runtime options:\n\
+-  --help                     Print this message and exit.\n\
+-  --version                  Print version information and exit.\n\
++  --sbcl-help                Print this message and exit.\n\
++  --sbcl-version             Print version information and exit.\n\
+   --core <filename>          Use the specified core file instead of the default.\n\
+   --dynamic-space-size <MiB> Size of reserved dynamic space in megabytes.\n\
+   --control-stack-size <MiB> Size of reserved control stack in megabytes.\n\
+@@ -529,14 +529,14 @@ parse_argv(struct memsize_options memsize_options,
+                     core = copied_string(argv[argi]);
+                     ++argi;
+                 }
+-            } else if (0 == strcmp(arg, "--help")) {
++            } else if (0 == strcmp(arg, "--sbcl-help")) {
+                 /* I think this is the (or a) usual convention: upon
+-                 * seeing "--help" we immediately print our help
++                 * seeing "--sbcl-help" we immediately print our help
+                  * string and exit, ignoring everything else. */
+                 print_help();
+                 exit(0);
+-            } else if (0 == strcmp(arg, "--version")) {
+-                /* As in "--help" case, I think this is expected. */
++            } else if (0 == strcmp(arg, "--sbcl-version")) {
++                /* As in "--sbcl-help" case, I think this is expected. */
+                 print_version();
+                 exit(0);
+             } else if ((n_consumed = is_memsize_arg(argv, argi, argc, &merge_core_pages))) {

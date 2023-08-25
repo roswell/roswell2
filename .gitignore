@@ -1,0 +1,8 @@
+*.o
+install-alpine
+sbcl.core
+/sbcl
+static-sbcl
+/quicklisp
+linkage-table-prelink-info-override.c
+linkage-info.sexp
