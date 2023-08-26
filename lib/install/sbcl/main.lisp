@@ -58,7 +58,13 @@
     :description (format nil "set archive uri")
     :parameter "URI"
     :long-name "uri"
-    :key :uri)))
+    :key :uri)
+   (clingon:make-option
+    :string
+    :description (format nil "set local archive to install instad of downloading from The internet.")
+    :parameter "sbcl-archivefile"
+    :long-name "archive"
+    :key :archive)))
 
 (defun impl-tsv-uri (param)
   (format nil  "~Afiles/sbcl-bin_uri.tsv" (install-param-base-uri param)))
@@ -120,19 +126,23 @@
                            "-"
                            (format nil "-~A-" (install-param-variant param)))
                        "binary.tar.bz2")))
-  (setf (install-param-archive param) 
-        (ensure-directories-exist (merge-pathnames (format nil "archives/~A"
-                                                           (file-namestring (install-param-uri param)))
-                                                   (app-cachedir))))
+  (setf (install-param-archive param)
+        (or (uiop:file-exists-p (install-param-archive param))
+            (ensure-directories-exist
+             (merge-pathnames (format nil "archives/~A"
+                                      (file-namestring (install-param-uri param)))
+                              (app-cachedir)))))
   (message :impl-download "Downlaad ~A/~A..."
            (install-param-impl param)
            (install-param-version param))
   (message :impl-download "URI: ~A" (install-param-uri param))
   (message :impl-download "PATH: ~A" (install-param-archive param))
-  (let ((code (download-simple (install-param-uri param) (install-param-archive param))))
-    (unless (zerop code)
-      (message :impl-download "Download failed (Code=~A)" code)
-      (uiop:quit 1)))
+  (if (uiop:file-exists-p (install-param-archive param))
+      (message :impl-download "PATH: ~A already exist. skip downloading." (install-param-archive param))
+      (let ((code (download-simple (install-param-uri param) (install-param-archive param))))
+        (unless (zerop code)
+          (message :impl-download "Download failed (Code=~A)" code)
+          (uiop:quit 1))))
   param)
 
 (defun impl-expand (param)
@@ -242,4 +252,3 @@
     #+linux
     (impl-patchelf param)
     (impl-set-config param)))
-    
