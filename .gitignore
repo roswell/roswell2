@@ -1,8 +1,10 @@
 *.o
-install-alpine
-sbcl.core
+*.fasl
 /sbcl
-static-sbcl
+/static-sbcl
 /quicklisp
-linkage-table-prelink-info-override.c
-linkage-info.sexp
+/bin/ros
+/bin/ros.exe
+/sbcl.core
+/linkage-table-prelink-info-override.c
+/linkage-info.sexp
