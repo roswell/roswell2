@@ -96,17 +96,6 @@
 (defun sub-commands ()
   )
 
-(defun impl-path (param)
-  ;; "~/.cache/roswell/impl/sbcl/2.3.7/x86-64/linux/bin/"
-  (merge-pathnames
-   (format nil "impl/~A/~A/~A/~A/~A/"
-           (install-param-impl param)
-           (install-param-version param)
-           (install-param-os param)
-           (install-param-arch param)
-           (install-param-variant param))
-   (app-cachedir)))
-
 (defclass run-param ()
   ((impl
     :initarg :impl
@@ -173,12 +162,12 @@
                       (first gsplit)))
            (version (or (clingon:getopt cmd :version)
                         (second gsplit)
-                        (config '("sbcl" "version") config)))
+                        (config `(,impl "version") config)))
            (param (make-instance 
                    'run-param
                    :impl impl
                    :variant (or (clingon:getopt cmd :variant)
-                                (config '("sbcl" "variant") config))
+                                (config `(,impl "variant") config))
                    :os      (or (clingon:getopt cmd :os)      (uname-s))
                    :arch    (or (clingon:getopt cmd :arch)    (uname-m))
                    :version version
@@ -191,8 +180,9 @@
                         (uiop:safe-read-from-string
                          (uiop:read-file-line
                           (merge-pathnames "roswell.class" (impl-path param))))))))
+            (message :main-handler "just before run impl-path:~S sym:~S param:~S"
+                     (impl-path param) sym param)
             (when sym
               (run sym param config)))
-          
-          ))
+          (message :main-handler "impl-not found")))
     (uiop:quit)))
