@@ -148,30 +148,28 @@
     (clingon:run command
                  (cdr (uiop/image:raw-command-line-arguments)))))
 
+(defun toml-path (where)
+  (let ((global-directory (app-cachedir))
+        (local-directory (uiop:getcwd)))
+    (case where
+      (:local (merge-pathnames ".roswell-config.toml" local-directory))
+      (:global (merge-pathnames "config.toml" global-directory))
+      (t (error "invalid where eparameter for config")))))
+
 (defun load-config (&key
                     (where :local)
-                    (global-directory (app-cachedir))
-                    (local-directory (uiop:getcwd))
                     (default (make-hash-table :test 'equal)))
-  (let ((path (case where
-                (:local (merge-pathnames ".roswell/config.toml" local-directory))
-                (:global (merge-pathnames "config.toml" global-directory))
-                (t (error "invalid where eparameter for config")))))
+  (let ((path (toml-path where)))
     (if (uiop:file-exists-p path)
         (or (ignore-errors (cl-toml:parse-file path))
             (message :impl-set-config "broken ~A" path))
         default)))
 
-
 (defun save-config (&key 
                     config
-                    (where :local)
-                    (global-directory (app-cachedir))
-                    (local-directory (uiop:getcwd)))
-  (let ((path (case where
-                (:local (merge-pathnames ".roswell/config.toml" local-directory))
-                (:global (merge-pathnames "config.toml" global-directory))
-                (t (error "invalid where parameter for config")))))
+                    (where :local))
+  (let ((path (toml-path where)))
+    (message :save-config "save-config path:~S" path)
     (with-open-file (o path :direction :output
                        :if-exists :supersede)
       (cl-toml:encode config o))))
