@@ -18,16 +18,16 @@
   (message :run "check params ~S"
            (list :param param
                  :config config
-                 :args (run-param-args param)))
+                 :args (impl-param-args param)))
   (let* ((impl-path (impl-path param))
-         (args (run-param-args param))
+         (args (impl-param-args param))
          (sbcl-home (merge-pathnames "lib/sbcl/" impl-path))
          (pos (position "--" args :test 'equal))
          (runtime-options (when pos (subseq args (1+ pos))))
          (args (if pos (subseq args 0 pos) args))
          ret
          help
-         (image (run-param-image param)))
+         (image (impl-param-image param)))
     (setf (uiop:getenv "SBCL_HOME") (uiop:native-namestring sbcl-home))
     (push (uiop:native-namestring (merge-pathnames (format nil "bin/sbcl~A" (exeext)) impl-path)) ret)
     (loop while runtime-options

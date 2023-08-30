@@ -9,8 +9,8 @@
   (:export :run 
            :distinguish
            :*forms* :impl-path
-           :run-param-args
-           :run-param-image))
+           :impl-param-args
+           :impl-param-image))
 
 (in-package :roswell2.cmd.run/main)
 
@@ -158,44 +158,44 @@
                hash))
     result))
 
-(defclass run-param ()
+(defclass impl-param ()
   ((impl
     :initarg :impl
     :initform nil
-    :accessor run-param-impl)
+    :accessor impl-param-name)
    (variant
     :initarg :variant
     :initform nil
-    :accessor run-param-variant)
+    :accessor impl-param-variant)
    (os
     :initarg :os
     :initform nil
-    :accessor run-param-os)
+    :accessor impl-param-os)
    (arch
     :initarg :arch
     :initform nil
-    :accessor run-param-arch)
+    :accessor impl-param-arch)
    (version
     :initarg :version
     :initform nil
-    :accessor run-param-version)
+    :accessor impl-param-version)
    (args
     :initarg :args
     :initform nil
-    :accessor run-param-args)
+    :accessor impl-param-args)
    (image
     :initarg :image
     :initform nil
-    :accessor run-param-image)))
+    :accessor impl-param-image)))
 
 (defun impl-path (param)
   (merge-pathnames
    (format nil "impl/~A/~A/~A/~A/~A/"
-           (run-param-impl param)
-           (run-param-version param)
-           (run-param-os param)
-           (run-param-arch param)
-           (run-param-variant param))
+           (impl-param-name param)
+           (impl-param-version param)
+           (impl-param-os param)
+           (impl-param-arch param)
+           (impl-param-variant param))
    (app-cachedir)))
 
 (defgeneric run (kind param config cmd)
@@ -225,9 +225,10 @@
                         (second gsplit)
                         (and impl (config `(,impl "version") config))))
            (variant (or (clingon:getopt cmd :variant)
-                        (and impl (config `(,impl "variant") config))))
+                        (and impl (config `(,impl "variant") config :if-does-not-exist nil))
+                        (symbol-value (read-from-string (format nil "roswell2.install.~A:*default-variant*" impl)))))
            (param (make-instance
-                   'run-param
+                   'impl-param
                    :impl impl
                    :variant variant
                    :os      (or (clingon:getopt cmd :os)      (uname-s))
@@ -244,7 +245,8 @@
                           (merge-pathnames "roswell.class" (impl-path param))))))))
             (message :main-handler "just before run impl-path:~S sym:~S param:~S"
                      (impl-path param) sym param)
-            (when sym
-              (run sym param config cmd)))
+            (if sym
+              (run sym param config cmd)
+              ))
           (clingon:run cmd '("--help"))))
     (uiop:quit)))
