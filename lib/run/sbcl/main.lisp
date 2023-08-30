@@ -2,6 +2,7 @@
   (:use :cl
         :roswell-bin/util
         :roswell-bin/uname
+        :roswell2/main
         :roswell2.cmd.run/main)
   (:nicknames :roswell2.run.sbcl))
 (in-package :roswell2.run.sbcl/main)

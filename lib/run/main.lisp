@@ -9,8 +9,7 @@
   (:export :run 
            :distinguish
            :*forms* :impl-path
-           :impl-param-args
-           :impl-param-image))
+           ))
 
 (in-package :roswell2.cmd.run/main)
 
@@ -158,46 +157,6 @@
                hash))
     result))
 
-(defclass impl-param ()
-  ((impl
-    :initarg :impl
-    :initform nil
-    :accessor impl-param-name)
-   (variant
-    :initarg :variant
-    :initform nil
-    :accessor impl-param-variant)
-   (os
-    :initarg :os
-    :initform nil
-    :accessor impl-param-os)
-   (arch
-    :initarg :arch
-    :initform nil
-    :accessor impl-param-arch)
-   (version
-    :initarg :version
-    :initform nil
-    :accessor impl-param-version)
-   (args
-    :initarg :args
-    :initform nil
-    :accessor impl-param-args)
-   (image
-    :initarg :image
-    :initform nil
-    :accessor impl-param-image)))
-
-(defun impl-path (param)
-  (merge-pathnames
-   (format nil "impl/~A/~A/~A/~A/~A/"
-           (impl-param-name param)
-           (impl-param-version param)
-           (impl-param-os param)
-           (impl-param-arch param)
-           (impl-param-variant param))
-   (app-cachedir)))
-
 (defgeneric run (kind param config cmd)
   (:documentation "run"))
 
@@ -225,8 +184,11 @@
                         (second gsplit)
                         (and impl (config `(,impl "version") config))))
            (variant (or (clingon:getopt cmd :variant)
-                        (and impl (config `(,impl "variant") config :if-does-not-exist nil))
-                        (symbol-value (read-from-string (format nil "roswell2.install.~A:*default-variant*" impl)))))
+                        (and impl
+                             (or
+                              (config `(,impl "variant") config :if-does-not-exist nil)
+                              (symbol-value (read-from-string
+                                             (format nil "roswell2.install.~A:*default-variant*" impl)))))))
            (param (make-instance
                    'impl-param
                    :impl impl

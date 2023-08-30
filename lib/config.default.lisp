@@ -1,4 +1,4 @@
-(defpackage :roswell2/config.default
+(uiop:define-package :roswell2/config.default
   (:use :cl))
 (in-package :roswell2/config.default)
 

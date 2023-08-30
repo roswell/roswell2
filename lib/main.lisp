@@ -6,14 +6,80 @@
   (:nicknames :roswell2)
   (:import-from :clingon)
   (:import-from :cl-toml)
-  (:export :setup
+  (:export :impl-path
+           :impl-param
+           :impl-param-name
+           :impl-param-variant
+           :impl-param-os
+           :impl-param-arch
+           :impl-param-base-uri
+           :impl-param-version
+           :impl-param-uri
+           :impl-param-archive
+           :impl-param-args
+           :impl-param-image
+           :setup
            :main
            :command
            :sub-command-filter
            :config
            :save-config
            :load-config))
+
 (in-package :roswell2/main)
+
+(defun impl-path (param)
+  ;; "~/.cache/roswell/impl/sbcl/2.3.7/x86-64/linux/bin/"
+  (merge-pathnames
+   (format nil "impl/~A/~A/~A/~A/~A/"
+           (impl-param-name param)
+           (impl-param-version param)
+           (impl-param-os param)
+           (impl-param-arch param)
+           (impl-param-variant param))
+   (app-cachedir)))
+
+(defclass impl-param ()
+  ((impl
+    :initarg :impl
+    :initform nil
+    :accessor impl-param-name)
+   (variant
+    :initarg :variant
+    :initform nil
+    :accessor impl-param-variant)
+   (os
+    :initarg :os
+    :initform nil
+    :accessor impl-param-os)
+   (arch
+    :initarg :arch
+    :initform nil
+    :accessor impl-param-arch)
+   (version
+    :initarg :version
+    :initform nil
+    :accessor impl-param-version)
+   (base-uri
+    :initarg :base-uri
+    :initform nil
+    :accessor impl-param-base-uri)
+   (uri
+    :initarg :uri
+    :initform nil
+    :accessor impl-param-uri)
+   (archive
+    :initarg :archive
+    :initform nil
+    :accessor impl-param-archive)
+   (args
+    :initarg :args
+    :initform nil
+    :accessor impl-param-args)
+   (image
+    :initarg :image
+    :initform nil
+    :accessor impl-param-image)))
 
 (defun string-start-with-filter (str)
   (let ((len (length str)))
