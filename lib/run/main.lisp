@@ -17,7 +17,6 @@
 (defvar *forms* nil)
 (defvar *command-class* 'roswell2/clingon.extensions::run-command)
 
-
 (defun options ()
   ;;tbd consider make it extensible from sub modules.
   "Returns the options for the  command"
@@ -54,6 +53,13 @@
     :long-name "version"
     :key :version)
    (clingon:make-option
+    :string
+    :description "continue from Lisp image"
+    :parameter "IMAGE"
+    :short-name #\m
+    :long-name "image"
+    :key :image)
+   (clingon:make-option
     :option-filter
     :description "evaluate form"
     :parameter "FORM"
@@ -76,25 +82,81 @@
               nil)
     :key :load)
    (clingon:make-option
-    :counter-filter
+    :option-filter
     :description "quit lisp here"
     :short-name #\q
     :long-name "quit"
     :filter (lambda (x option)
               (declare (ignore x option))
-              (push (list :quit 0) *forms*)
+              (push (list :quit) *forms*)
               nil)
     :key :quit)
    (clingon:make-option
-    :string
-    :description "continue from Lisp image"
-    :parameter "IMAGE"
-    :short-name #\m
-    :long-name "image"
-    :key :image)))
+    :option-filter
+    :description "run repl after option processing"
+    :long-name "repl"
+    :filter (lambda (x option)
+              (declare (ignore x option))
+              (push (list :repl) *forms*)
+              nil)
+    :key :repl)
+   (clingon:make-option
+    :option-filter
+    :description "dump image after option processing"
+    :parameter "FILE"
+    :long-name "dump"
+    :filter (lambda (x option)
+              (declare (ignore option))
+              (push (list :dump x) *forms*)
+              nil)
+    :key :dump)))
+
+(defvar *config* nil)
+
+(defun sub-handler (cmd)
+  (let* ((name (clingon.command:command-name cmd))
+         (run (roswell2:command :roswell2.cmd.run
+                                :name name)))
+    (message :sub-handler "sub-handler ~A config:~S cmd:~S forms:~S"
+             (clingon:command-name cmd)
+             (config `("pinned" ,name "args")
+                     *config*)
+             cmd
+             *forms*)
+    (let* ((list (coerce (config `("pinned" ,name "args")
+                                 *config*) 'list))
+           (pos (position "--" list :test 'equal))
+           (first (subseq list 0 pos))
+           (last (subseq list (1+ pos)))
+           (mid (loop for (opt . val) in (nreverse *forms*)
+                      append `(,(format nil "--~A" (string-downcase opt))
+                               ,@val)))
+           (*forms* nil))
+      (clingon:run run `("-L" ,name
+                         ,@first
+                         ,@(or mid '("--repl"))
+                         "--" ,@last)))))
 
 (defun sub-commands ()
-  )
+  (setf *config* (load-config :where :local))
+  (let (result
+        (hash (config '("pinned") *config*)))
+    (message :run-sub-commands "run sub-commands: ~S"
+             hash)
+    (when hash
+      (maphash (lambda (name y)
+                 (push (make-instance
+                        'roswell2/clingon.extensions::command-without-version
+                        :name name
+                        :description (format nil "launch ~A" name)
+                        :options (loop for i in (options)
+                                       unless (member (clingon.options:option-key i)
+                                                      '(:lisp :arch :variant :os :version :image))
+                                       collect i)
+                        :handler 'sub-handler)
+                       result))
+               hash))
+    result))
 
 (defclass run-param ()
   ((impl
@@ -136,7 +198,7 @@
            (run-param-variant param))
    (app-cachedir)))
 
-(defgeneric run (kind param config)
+(defgeneric run (kind param config cmd)
   (:documentation "run"))
 
 (defgeneric distinguish (impl version)
@@ -154,20 +216,20 @@
              args *forms*
              (clingon:command-name cmd)
              (clingon:getopt cmd :lisp-global))
-    (let* ((config (or (load-config :where :local :default nil)
-                       (load-config :where :global)))
+    (let* ((config (load-config :where :global))
            (global (clingon:getopt cmd :lisp-global))
            (gsplit (uiop:split-string global :separator '(#\/)))
            (impl  (or (clingon:getopt cmd :lisp)
                       (first gsplit)))
            (version (or (clingon:getopt cmd :version)
                         (second gsplit)
-                        (config `(,impl "version") config)))
-           (param (make-instance 
+                        (and impl (config `(,impl "version") config))))
+           (variant (or (clingon:getopt cmd :variant)
+                        (and impl (config `(,impl "variant") config))))
+           (param (make-instance
                    'run-param
                    :impl impl
-                   :variant (or (clingon:getopt cmd :variant)
-                                (config `(,impl "variant") config))
+                   :variant variant
                    :os      (or (clingon:getopt cmd :os)      (uname-s))
                    :arch    (or (clingon:getopt cmd :arch)    (uname-m))
                    :version version
@@ -183,6 +245,6 @@
             (message :main-handler "just before run impl-path:~S sym:~S param:~S"
                      (impl-path param) sym param)
             (when sym
-              (run sym param config)))
-          (message :main-handler "impl-not found")))
+              (run sym param config cmd)))
+          (clingon:run cmd '("--help"))))
     (uiop:quit)))

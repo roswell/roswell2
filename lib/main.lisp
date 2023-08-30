@@ -39,6 +39,7 @@
         for system = (asdf:find-system system-name)
         do (message :setup "load-system[~A]" system-name)
            (ql:quickload system-name))
+  (ql:quickload :roswell2/config.default)
   ;; tbd load system from dists.
   (let ((config-lisp (merge-pathnames "config.lisp" path)))
     (when (uiop:file-exists-p config-lisp)
@@ -108,7 +109,6 @@
               (setf *verbose* x))
     :description "be quite noisy"
     :key :verbose)))
-   
 
 (defun handler (cmd)
   "Handler for just evaluate options"

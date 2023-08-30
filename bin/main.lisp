@@ -22,6 +22,9 @@
   (let* ((arg (first args))
          (args (rest args)))
     (cond
+      ((equal arg "rebuild")
+       (build nil :force t)
+       (uiop:quit 0))
       ((equal arg "download")
        (apply 'download-simple
               (mapcar 'intern-if-it-looks-keyword args)))

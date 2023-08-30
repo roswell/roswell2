@@ -13,13 +13,12 @@
     (asdf:find-system :roswell2.run.sbcl))))
 
 (defmethod run ((kind (eql :roswell2.sbcl))
-                param config)
+                param config cmd)
   "run sbcl installed on cachedir"
   (message :run "check params ~S"
            (list :param param
                  :config config
-                 :args (run-param-args param)
-                 ))
+                 :args (run-param-args param)))
   (let* ((impl-path (impl-path param))
          (args (run-param-args param))
          (sbcl-home (merge-pathnames "lib/sbcl/" impl-path))
@@ -43,14 +42,16 @@
       (push "--noinform" ret))
     (push "--no-sysinit" ret)
     (push "--no-userinit" ret)
+    (push "--non-interactive" ret)
     (push "--eval" ret)
     (push (format nil "(progn #-roswell2.run.sbcl/init (cl:load ~S))" (init.lisp-path)) ret)
     (push "--eval" ret)
-    (push (format nil "(roswell2.run.sbcl/init:main '~S)"
+    (push (format nil "(roswell.init:main '~S)"
                   (append `((:eval ,(format nil "(setf roswell.init:*impl-path* ~S)" impl-path)))
-                          roswell2.cmd.run:*forms*))
+                          (or roswell2.cmd.run:*forms*
+                              '((:repl)))))
           ret)
     (setf ret (nreverse ret))
-    (message :run-sbcl "ret:~S" ret)
+    (message :run-sbcl "run-sbcl:~S" ret)
     (exec ret)))
 ;;; https://thinca.hatenablog.com/entry/20100210/1265813598

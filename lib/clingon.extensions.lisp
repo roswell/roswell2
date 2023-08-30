@@ -68,6 +68,10 @@
     ((or (clingon:short-option-p name)
          (clingon:long-option-p name))
      nil)
+    ((find-if (lambda (sub-command)
+                (or (string= name (clingon.command:command-name sub-command))
+                    (member name (clingon.command:command-aliases sub-command) :test #'string=)))
+              (clingon.command:command-sub-commands command)))
     (t ;;stop evaluating. if not option.
      (setf (clingon:command-args-to-parse command)
            `("*" ,@(if (equal "--" name) nil (list "--"))

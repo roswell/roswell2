@@ -7,6 +7,14 @@
 
 (defparameter *load* `((identity . cl:load)))
 (defvar *impl-path* nil)
+(defvar *run-repl* nil)
+(defvar *dump-file* nil)
+(defvar *dump-option* nil)
+(defvar *repl-function* nil)
+
+(defun dump (file &rest rest)
+  (declare (ignorable rest))
+  (setf *dump-file* file))
 
 (defun load (file &rest rest)
   (let ((function (rest (find-if (lambda (x) (funcall (first x) file)) *load*))))
@@ -22,13 +30,24 @@
         until (eql exp end)
         do (cl:eval exp)))
 
-(defun quit (arg &rest rest)
+(defun quit (&optional (arg 0) &rest rest)
   (declare (ignorable rest))
   (sb-ext:quit :unix-status arg))
+
+(defun repl (&rest rest)
+  (declare (ignorable rest))
+  (setf *run-repl* t))
 
 (defun main (args)
   (loop with package = (find-package :roswell2.run.sbcl/init)
         for elt in args
-        do (apply (intern (string (first elt)) package) (rest elt))))
+        do (apply (intern (string (first elt)) package) (rest elt)))
+  (when *dump-file*
+    (apply 'sb-ext:save-lisp-and-die *dump-file* *dump-option*))
+  (when *run-repl*
+    (sb-ext:enable-debugger)
+    (if *repl-function*
+        (funcall *repl-function*)
+        (sb-impl::toplevel-repl nil))))
 
 (push :roswell2.run.sbcl/init *features*)
