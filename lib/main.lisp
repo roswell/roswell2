@@ -159,13 +159,6 @@
               (print (list :load x)) x)
     :key :load)
    (clingon:make-option
-    :string
-    :description "Run roswell with a lisp impl NAME[/VERSION]."
-    :parameter "NAME[/VERSION]"
-    :short-name #\L
-    :long-name "lisp"
-    :key :lisp-global)
-   (clingon:make-option
     :counter-filter
     :short-name #\v
     :long-name "verbose"

@@ -171,17 +171,13 @@
   "Handler for just evaluate options"
   (let ((args (clingon:command-arguments cmd)))
     (setf *forms* (nreverse *forms*))
-    (message :main-handler "args-for run handler ~S forms:~S name:~S lisp-global: ~S"
+    (message :main-handler "args-for run handler ~S forms:~S name:~S"
              args *forms*
              (clingon:command-name cmd)
-             (clingon:getopt cmd :lisp-global))
+             )
     (let* ((config (load-config :where :global))
-           (global (clingon:getopt cmd :lisp-global))
-           (gsplit (uiop:split-string global :separator '(#\/)))
-           (impl  (or (clingon:getopt cmd :lisp)
-                      (first gsplit)))
+           (impl  (clingon:getopt cmd :lisp))
            (version (or (clingon:getopt cmd :version)
-                        (second gsplit)
                         (and impl (config `(,impl "version") config))))
            (variant (or (clingon:getopt cmd :variant)
                         (and impl
