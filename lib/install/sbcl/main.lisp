@@ -18,7 +18,7 @@
 (defvar *base-uri* "https://github.com/roswell/sbcl_bin/releases/download/")
 (defvar *vanilla* "bin")
 (defvar *default-variant* *vanilla*)
-(defvar *param-class* 'install-param)
+(defvar *param-class* 'impl-param)
 
 (defun options ()
   "Returns the options for the  command"
@@ -67,14 +67,14 @@
     :key :archive)))
 
 (defun impl-tsv-uri (param)
-  (format nil  "~Afiles/sbcl-bin_uri.tsv" (install-param-base-uri param)))
+  (format nil  "~Afiles/sbcl-bin_uri.tsv" (impl-param-base-uri param)))
 
 (defun impl-set-version-param (param)
   (let* ((tsv-uri  (impl-tsv-uri param))
          (tsv-path (merge-pathnames (format nil "tmp/~A" (file-namestring tsv-uri)) (app-cachedir))))
     (ensure-directories-exist tsv-path)
     (message :impl-set-version-param "No ~A version specified. Downloading ~A to see the available versions..."
-             (install-param-impl param)
+             (impl-param-impl param)
              (file-namestring tsv-uri))
     (let ((code (download-simple tsv-uri tsv-path)))
       (unless (zerop code)
@@ -87,16 +87,16 @@
           for version = (third split)
           for variant = (fourth split)
           for uri = (fifth split)
-          do (when (and (if (equal (install-param-variant param) *vanilla*)
+          do (when (and (if (equal (impl-param-variant param) *vanilla*)
                             (equal variant "")
-                            (equal (install-param-variant param) variant))
-                        (equal (install-param-os param) system)
-                        (equal (install-param-arch param) arch))
-               (setf (install-param-version param) version
-                     (install-param-uri param)     uri)
+                            (equal (impl-param-variant param) variant))
+                        (equal (impl-param-os param) system)
+                        (equal (impl-param-arch param) arch))
+               (setf (impl-param-version param) version
+                     (impl-param-uri param)     uri)
                (message :impl-set-version-param "Installing ~A/~A..."
-                        (install-param-impl param)
-                        (install-param-version param))
+                        (impl-param-impl param)
+                        (impl-param-version param))
                (return-from impl-set-version-param param)))
     (uiop:quit 1)))
 
@@ -107,46 +107,46 @@
                             (impl-path param)))))
 
 (defun impl-download (param)
-  (unless (install-param-uri param)
-    (setf (install-param-uri param)
+  (unless (impl-param-uri param)
+    (setf (impl-param-uri param)
           (concatenate 'string
-                       (install-param-base-uri param)
+                       (impl-param-base-uri param)
                        ;;"https://github.com/roswell/sbcl_bin/releases/download/"
-                       (install-param-version param) ;;"2.3.7"
+                       (impl-param-version param) ;;"2.3.7"
                        "/"
-                       (install-param-impl param) ;; "sbcl"
+                       (impl-param-impl param) ;; "sbcl"
                        "-"
-                       (install-param-version param) ;;"2.3.7"
+                       (impl-param-version param) ;;"2.3.7"
                        "-"
-                       (install-param-arch param) ;;"x86-64"
+                       (impl-param-arch param) ;;"x86-64"
                        "-"
-                       (install-param-os param) ;;"linux"
-                       (if (equal (install-param-variant param)
+                       (impl-param-os param) ;;"linux"
+                       (if (equal (impl-param-variant param)
                                   *vanilla*)
                            "-"
-                           (format nil "-~A-" (install-param-variant param)))
+                           (format nil "-~A-" (impl-param-variant param)))
                        "binary.tar.bz2")))
-  (setf (install-param-archive param)
-        (or (uiop:file-exists-p (install-param-archive param))
+  (setf (impl-param-archive param)
+        (or (uiop:file-exists-p (impl-param-archive param))
             (ensure-directories-exist
              (merge-pathnames (format nil "archives/~A"
-                                      (file-namestring (install-param-uri param)))
+                                      (file-namestring (impl-param-uri param)))
                               (app-cachedir)))))
   (message :impl-download "Downlaad ~A/~A..."
-           (install-param-impl param)
-           (install-param-version param))
-  (message :impl-download "URI: ~A" (install-param-uri param))
-  (message :impl-download "PATH: ~A" (install-param-archive param))
-  (if (uiop:file-exists-p (install-param-archive param))
-      (message :impl-download "PATH: ~A already exist. skip downloading." (install-param-archive param))
-      (let ((code (download-simple (install-param-uri param) (install-param-archive param))))
+           (impl-param-impl param)
+           (impl-param-version param))
+  (message :impl-download "URI: ~A" (impl-param-uri param))
+  (message :impl-download "PATH: ~A" (impl-param-archive param))
+  (if (uiop:file-exists-p (impl-param-archive param))
+      (message :impl-download "PATH: ~A already exist. skip downloading." (impl-param-archive param))
+      (let ((code (download-simple (impl-param-uri param) (impl-param-archive param))))
         (unless (zerop code)
           (message :impl-download "Download failed (Code=~A)" code)
           (uiop:quit 1))))
   param)
 
 (defun impl-expand (param)
-  (let ((archive (uiop:native-namestring (install-param-archive param)))
+  (let ((archive (uiop:native-namestring (impl-param-archive param)))
         (dist-path (uiop:native-namestring 
                     (ensure-directories-exist (merge-pathnames "src/" (app-cachedir))))))
     (message :impl-expand "Extracting ~A to ~A" archive dist-path);
@@ -168,19 +168,19 @@
              (concatenate 
               'string
               "src/"
-              (install-param-impl param)
-              "-" (install-param-version param)
-              "-"  (install-param-arch param)
-              "-"  (install-param-os param)
-              (or (and (equal *vanilla* (install-param-variant param))
+              (impl-param-impl param)
+              "-" (impl-param-version param)
+              "-"  (impl-param-arch param)
+              "-"  (impl-param-os param)
+              (or (and (equal *vanilla* (impl-param-variant param))
                        "/")
-                  (format nil "-~A/" (install-param-variant param))))
+                  (format nil "-~A/" (impl-param-variant param))))
              (app-cachedir))))
          (sbcl-home (namestring (merge-pathnames "lib/sbcl/" impl-path))))
     (message :impl-install "Building ~A/~A(~A)..."
-             (install-param-impl param)
-             (install-param-version param)
-             (install-param-variant param))
+             (impl-param-impl param)
+             (impl-param-version param)
+             (impl-param-variant param))
     (chdir expand-path)
     (setf (uiop:getenv "SBCL_HOME") (subseq* sbcl-home 0 -1)
           (uiop:getenv "INSTALL_ROOT") (subseq* impl-path 0 -1))
@@ -208,8 +208,8 @@
                                       (namestring i)))))))
 
 (defun impl-set-config (param)
-  (let* ((variant (install-param-variant param))
-         (version (install-param-version param))
+  (let* ((variant (impl-param-variant param))
+         (version (impl-param-version param))
          (config (load-config :where :global)))
     (setf (config '("sbcl" "variant") config) variant)
     (setf (config '("sbcl" "version") config) version)
@@ -234,17 +234,17 @@
                 :version (clingon:getopt cmd :version)
                 :uri (clingon:getopt cmd :uri))))
     (message :main-handler "args-for install ~A  ~S"
-             (install-param-impl param)
+             (impl-param-impl param)
              (clingon:command-arguments cmd))
-    (message :main-handler "version: ~S" (install-param-version param))
-    (unless (install-param-version param)
+    (message :main-handler "version: ~S" (impl-param-version param))
+    (unless (impl-param-version param)
       (impl-set-version-param param))
     (when (impl-already-installedp param)
       (progn
         (message :main-handler "~A/~A(~A) is already installed."
-                 (install-param-impl param)
-                 (install-param-version param)
-                 (install-param-variant param))
+                 (impl-param-impl param)
+                 (impl-param-version param)
+                 (impl-param-variant param))
         (uiop:quit 1)))
     (impl-download param)
     (impl-expand param)

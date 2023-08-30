@@ -6,15 +6,15 @@
   (:import-from :clingon)
   (:export :sh
            :impl-path
-           :install-param
-           :install-param-impl
-           :install-param-variant
-           :install-param-os
-           :install-param-arch
-           :install-param-base-uri
-           :install-param-version
-           :install-param-uri
-           :install-param-archive))
+           :impl-param
+           :impl-param-impl
+           :impl-param-variant
+           :impl-param-os
+           :impl-param-arch
+           :impl-param-base-uri
+           :impl-param-version
+           :impl-param-uri
+           :impl-param-archive))
    
 (in-package :roswell2.cmd.install/main)
 
@@ -46,43 +46,43 @@
   ;; "~/.cache/roswell/impl/sbcl/2.3.7/x86-64/linux/bin/"
   (merge-pathnames
    (format nil "impl/~A/~A/~A/~A/~A/"
-           (install-param-impl param)
-           (install-param-version param)
-           (install-param-os param)
-           (install-param-arch param)
-           (install-param-variant param))
+           (impl-param-impl param)
+           (impl-param-version param)
+           (impl-param-os param)
+           (impl-param-arch param)
+           (impl-param-variant param))
    (app-cachedir)))
 
-(defclass install-param ()
+(defclass impl-param ()
   ((impl
     :initarg :impl
     :initform nil
-    :accessor install-param-impl)
+    :accessor impl-param-impl)
    (variant
     :initarg :variant
     :initform nil
-    :accessor install-param-variant)
+    :accessor impl-param-variant)
    (os
     :initarg :os
     :initform nil
-    :accessor install-param-os)
+    :accessor impl-param-os)
    (arch
     :initarg :arch
     :initform nil
-    :accessor install-param-arch)
+    :accessor impl-param-arch)
    (base-uri
     :initarg :base-uri
     :initform nil
-    :accessor install-param-base-uri)
+    :accessor impl-param-base-uri)
    (version
     :initarg :version
     :initform nil
-    :accessor install-param-version)
+    :accessor impl-param-version)
    (uri
     :initarg :uri
     :initform nil
-    :accessor install-param-uri)
+    :accessor impl-param-uri)
    (archive
     :initarg :archive
     :initform nil
-    :accessor install-param-archive)))
+    :accessor impl-param-archive)))
