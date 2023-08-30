@@ -74,7 +74,7 @@
          (tsv-path (merge-pathnames (format nil "tmp/~A" (file-namestring tsv-uri)) (app-cachedir))))
     (ensure-directories-exist tsv-path)
     (message :impl-set-version-param "No ~A version specified. Downloading ~A to see the available versions..."
-             (impl-param-impl param)
+             (impl-param-name param)
              (file-namestring tsv-uri))
     (let ((code (download-simple tsv-uri tsv-path)))
       (unless (zerop code)
@@ -95,7 +95,7 @@
                (setf (impl-param-version param) version
                      (impl-param-uri param)     uri)
                (message :impl-set-version-param "Installing ~A/~A..."
-                        (impl-param-impl param)
+                        (impl-param-name param)
                         (impl-param-version param))
                (return-from impl-set-version-param param)))
     (uiop:quit 1)))
@@ -114,7 +114,7 @@
                        ;;"https://github.com/roswell/sbcl_bin/releases/download/"
                        (impl-param-version param) ;;"2.3.7"
                        "/"
-                       (impl-param-impl param) ;; "sbcl"
+                       (impl-param-name param) ;; "sbcl"
                        "-"
                        (impl-param-version param) ;;"2.3.7"
                        "-"
@@ -133,7 +133,7 @@
                                       (file-namestring (impl-param-uri param)))
                               (app-cachedir)))))
   (message :impl-download "Downlaad ~A/~A..."
-           (impl-param-impl param)
+           (impl-param-name param)
            (impl-param-version param))
   (message :impl-download "URI: ~A" (impl-param-uri param))
   (message :impl-download "PATH: ~A" (impl-param-archive param))
@@ -168,7 +168,7 @@
              (concatenate 
               'string
               "src/"
-              (impl-param-impl param)
+              (impl-param-name param)
               "-" (impl-param-version param)
               "-"  (impl-param-arch param)
               "-"  (impl-param-os param)
@@ -178,7 +178,7 @@
              (app-cachedir))))
          (sbcl-home (namestring (merge-pathnames "lib/sbcl/" impl-path))))
     (message :impl-install "Building ~A/~A(~A)..."
-             (impl-param-impl param)
+             (impl-param-name param)
              (impl-param-version param)
              (impl-param-variant param))
     (chdir expand-path)
@@ -234,7 +234,7 @@
                 :version (clingon:getopt cmd :version)
                 :uri (clingon:getopt cmd :uri))))
     (message :main-handler "args-for install ~A  ~S"
-             (impl-param-impl param)
+             (impl-param-name param)
              (clingon:command-arguments cmd))
     (message :main-handler "version: ~S" (impl-param-version param))
     (unless (impl-param-version param)
@@ -242,7 +242,7 @@
     (when (impl-already-installedp param)
       (progn
         (message :main-handler "~A/~A(~A) is already installed."
-                 (impl-param-impl param)
+                 (impl-param-name param)
                  (impl-param-version param)
                  (impl-param-variant param))
         (uiop:quit 1)))

@@ -7,7 +7,7 @@
   (:export :sh
            :impl-path
            :impl-param
-           :impl-param-impl
+           :impl-param-name
            :impl-param-variant
            :impl-param-os
            :impl-param-arch
@@ -46,7 +46,7 @@
   ;; "~/.cache/roswell/impl/sbcl/2.3.7/x86-64/linux/bin/"
   (merge-pathnames
    (format nil "impl/~A/~A/~A/~A/~A/"
-           (impl-param-impl param)
+           (impl-param-name param)
            (impl-param-version param)
            (impl-param-os param)
            (impl-param-arch param)
@@ -57,7 +57,7 @@
   ((impl
     :initarg :impl
     :initform nil
-    :accessor impl-param-impl)
+    :accessor impl-param-name)
    (variant
     :initarg :variant
     :initform nil
