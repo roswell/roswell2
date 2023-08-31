@@ -186,7 +186,7 @@
                                              (format nil "roswell2.install.~A:*default-variant*" impl)))))))
            (param (make-instance
                    'impl-param
-                   :impl impl
+                   :name impl
                    :variant variant
                    :os      (or (clingon:getopt cmd :os)      (uname-s))
                    :arch    (or (clingon:getopt cmd :arch)    (uname-m))

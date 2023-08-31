@@ -41,8 +41,8 @@
    (app-cachedir)))
 
 (defclass impl-param ()
-  ((impl
-    :initarg :impl
+  ((name
+    :initarg :name
     :initform nil
     :accessor impl-param-name)
    (variant
@@ -89,7 +89,7 @@
 (defmethod print-object ((param impl-param) stream)
   (format stream "~S"
           `(,(type-of param)
-            ,@(when (impl-param-name param) (list :impl (impl-param-name param)))
+            ,@(when (impl-param-name param) (list :name (impl-param-name param)))
             ,@(when (impl-param-variant param) (list :variant (impl-param-variant param)))
             ,@(when (impl-param-os param) (list :os (impl-param-os param)))
             ,@(when (impl-param-arch param) (list :arch (impl-param-arch param)))

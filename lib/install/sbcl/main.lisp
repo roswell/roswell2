@@ -25,12 +25,6 @@
   (list
    (clingon:make-option
     :string
-    :description "set version for install"
-    :parameter "VERSION"
-    :long-name "version"
-    :key :version)
-   (clingon:make-option
-    :string
     :description (format nil "set arch for install. defualt:~A" (uname-m))
     :parameter "ARCH"
     :long-name "arch"
@@ -49,6 +43,12 @@
     :key :os)
    (clingon:make-option
     :string
+    :description "set version for install"
+    :parameter "VERSION"
+    :long-name "version"
+    :key :version)
+   (clingon:make-option
+    :string
     :description (format nil "set base-uri  default:~A" *base-uri*)
     :parameter "URI"
     :long-name "base-uri"
@@ -62,7 +62,7 @@
    (clingon:make-option
     :string
     :description (format nil "set local archive to install instad of downloading from The internet.")
-    :parameter "sbcl-archivefile"
+    :parameter "archivefile"
     :long-name "archive"
     :key :archive)))
 
@@ -223,7 +223,7 @@
   "Handler for just evaluate options"
   (let ((param (make-instance
                 *param-class*
-                :impl "sbcl"
+                :name "sbcl"
                 :variant (or (and (equal (clingon:getopt cmd :variant) "")
                                   *default-variant*)
                              (clingon:getopt cmd :variant)
