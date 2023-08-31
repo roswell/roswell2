@@ -18,6 +18,7 @@
            :impl-param-archive
            :impl-param-args
            :impl-param-image
+           :impl-param-run
            :setup
            :main
            :command
@@ -79,7 +80,26 @@
    (image
     :initarg :image
     :initform nil
-    :accessor impl-param-image)))
+    :accessor impl-param-image)
+   (run-type
+    :initarg :run
+    :initform nil
+    :accessor impl-param-run)))
+
+(defmethod print-object ((param impl-param) stream)
+  (format stream "~S"
+          `(,(type-of param)
+            ,@(when (impl-param-name param) (list :impl (impl-param-name param)))
+            ,@(when (impl-param-variant param) (list :variant (impl-param-variant param)))
+            ,@(when (impl-param-os param) (list :os (impl-param-os param)))
+            ,@(when (impl-param-arch param) (list :arch (impl-param-arch param)))
+            ,@(when (impl-param-version param) (list :version (impl-param-version param)))
+            ,@(when (impl-param-base-uri param) (list :base-uri (impl-param-base-uri param)))
+            ,@(when (impl-param-uri param) (list :uri (impl-param-uri param)))
+            ,@(when (impl-param-archive param) (list :archive (impl-param-archive param)))
+            ,@(when (impl-param-args param) (list :args (impl-param-args param)))
+            ,@(when (impl-param-image param) (list :image (impl-param-image param)))
+            ,@(when (impl-param-run param) (list :run (impl-param-run param))))))
 
 (defun string-start-with-filter (str)
   (let ((len (length str)))

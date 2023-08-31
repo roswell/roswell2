@@ -17,8 +17,7 @@
                 param config cmd)
   "run sbcl installed on cachedir"
   (message :run "check params ~S"
-           (list :param param
-                 :config config
+           (list :config config
                  :args (impl-param-args param)))
   (let* ((impl-path (impl-path param))
          (args (impl-param-args param))
@@ -29,6 +28,7 @@
          ret
          help
          (image (impl-param-image param)))
+    (message :run "set SBCL_HOME ~S" (uiop:native-namestring sbcl-home))
     (setf (uiop:getenv "SBCL_HOME") (uiop:native-namestring sbcl-home))
     (push (uiop:native-namestring (merge-pathnames (format nil "bin/sbcl~A" (exeext)) impl-path)) ret)
     (loop while runtime-options

@@ -173,8 +173,7 @@
     (setf *forms* (nreverse *forms*))
     (message :main-handler "args-for run handler ~S forms:~S name:~S"
              args *forms*
-             (clingon:command-name cmd)
-             )
+             (clingon:command-name cmd))
     (let* ((config (load-config :where :global))
            (impl  (clingon:getopt cmd :lisp))
            (version (or (clingon:getopt cmd :version)
@@ -193,18 +192,19 @@
                    :arch    (or (clingon:getopt cmd :arch)    (uname-m))
                    :version version
                    :args args)))
-      (if impl
-          (let ((sym (or
-                      (distinguish (intern impl :keyword)
-                                   (intern version :keyword))
-                      (ignore-errors
-                        (uiop:safe-read-from-string
-                         (uiop:read-file-line
-                          (merge-pathnames "roswell.class" (impl-path param))))))))
-            (message :main-handler "just before run impl-path:~S sym:~S param:~S"
-                     (impl-path param) sym param)
-            (if sym
-              (run sym param config cmd)
-              ))
-          (clingon:run cmd '("--help"))))
+      (unless impl
+        (clingon:run cmd '("--help")))
+      (let ((sym (or
+                  (distinguish (intern impl :keyword)
+                               (intern version :keyword))
+                  (ignore-errors
+                    (let (*read-eval*)
+                      (setf param (apply 'make-instance
+                                         (uiop:read-file-form
+                                          (merge-pathnames "roswell.sexp" (impl-path param))))))
+                    (uiop:safe-read-from-string (impl-param-run param))))))
+        (message :main-handler "just before run impl-path:~S sym:~S param:~S"
+                 (impl-path param) sym param)
+        (if sym
+            (run sym param config cmd))))
     (uiop:quit)))

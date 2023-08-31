@@ -149,7 +149,7 @@
   (let ((archive (uiop:native-namestring (impl-param-archive param)))
         (dist-path (uiop:native-namestring 
                     (ensure-directories-exist (merge-pathnames "src/" (app-cachedir))))))
-    (message :impl-expand "Extracting ~A to ~A" archive dist-path);
+    (message :impl-expand "Extracting ~A to ~A" archive dist-path)
     (tar
      (list "-xf" archive
            "-C" dist-path)))
@@ -214,10 +214,10 @@
     (setf (config '("sbcl" "variant") config) variant)
     (setf (config '("sbcl" "version") config) version)
     (save-config :config config :where :global)
-    (with-open-file (o (merge-pathnames "roswell.class" (impl-path param))
+    (with-open-file (o (merge-pathnames "roswell.sexp" (impl-path param))
                        :direction :output
                        :if-exists :supersede)
-      (format o ":roswell2.sbcl~%"))))
+      (format o "~S~%" param))))
 
 (defun handler (cmd)
   "Handler for just evaluate options"
@@ -232,7 +232,8 @@
                 :arch    (or (clingon:getopt cmd :arch)    (uname-m))
                 :base-uri(or (clingon:getopt cmd :base-uri)*base-uri*)
                 :version (clingon:getopt cmd :version)
-                :uri (clingon:getopt cmd :uri))))
+                :uri (clingon:getopt cmd :uri)
+                :run ":roswell2.sbcl")))
     (message :main-handler "args-for install ~A  ~S"
              (impl-param-name param)
              (clingon:command-arguments cmd))
