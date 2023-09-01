@@ -18,56 +18,17 @@
 (defvar *base-uri* "https://github.com/roswell/sbcl_bin/releases/download/")
 (defvar *vanilla* "bin")
 (defvar *default-variant* *vanilla*)
-(defvar *param-class* 'impl-param)
 
 (defun options ()
   "Returns the options for the  command"
-  (list
-   (clingon:make-option
-    :string
-    :description (format nil "set arch for install. defualt:~A" (uname-m))
-    :parameter "ARCH"
-    :long-name "arch"
-    :key :arch)
-   (clingon:make-option
-    :string
-    :description (format nil "set variant for install. default:~A https://github.com/roswell/sbcl_bin/blob/master/table.md" *default-variant*)
-    :parameter "VARIANT"
-    :long-name "variant"
-    :key :variant)
-   (clingon:make-option
-    :string
-    :description (format nil "set os for install. default:~A" (uname-s))
-    :parameter "OS"
-    :long-name "os"
-    :key :os)
-   (clingon:make-option
-    :string
-    :description "set version for install"
-    :parameter "VERSION"
-    :long-name "version"
-    :key :version)
-   (clingon:make-option
-    :string
-    :description (format nil "set base-uri  default:~A" *base-uri*)
-    :parameter "URI"
-    :long-name "base-uri"
-    :key :base-uri)
-   (clingon:make-option
-    :string
-    :description (format nil "set archive uri")
-    :parameter "URI"
-    :long-name "uri"
-    :key :uri)
-   (clingon:make-option
-    :string
-    :description (format nil "set local archive to install instad of downloading from The internet.")
-    :parameter "archivefile"
-    :long-name "archive"
-    :key :archive)))
+  (option-base
+   :variant-explanation (format nil "set variant for install. default:~A https://github.com/roswell/sbcl_bin/blob/master/table.md" *default-variant*)
+   :base-uri-explanation (format nil "set base-uri  default:~A" *base-uri*)
+   :arch-explanation (format nil "set arch for install. defualt:~A" (uname-m))
+   :os-explanation (format nil "set os for install. default:~A" (uname-s))))
 
 (defun impl-tsv-uri (param)
-  (format nil  "~Afiles/sbcl-bin_uri.tsv" (impl-param-base-uri param)))
+  (format nil "~Afiles/sbcl-bin_uri.tsv" (or (impl-param-base-uri param) *base-uri*)))
 
 (defun impl-set-version-param (param)
   (let* ((tsv-uri  (impl-tsv-uri param))
@@ -87,13 +48,14 @@
           for version = (third split)
           for variant = (fourth split)
           for uri = (fifth split)
-          do (when (and (if (equal (impl-param-variant param) *vanilla*)
-                            (equal variant "")
-                            (equal (impl-param-variant param) variant))
+          for param-variant = (impl-param-variant param)
+          do (when (and (equal variant (if (equal param-variant *vanilla*)
+                                           ""
+                                           param-variant))
                         (equal (impl-param-os param) system)
                         (equal (impl-param-arch param) arch))
-               (setf (impl-param-version param) version
-                     (impl-param-uri param)     uri)
+               (setf (impl-param-version param) version)
+               (setf (impl-param-uri param)     uri)
                (message :impl-set-version-param "Installing ~A/~A..."
                         (impl-param-name param)
                         (impl-param-version param))
@@ -110,7 +72,7 @@
   (unless (impl-param-uri param)
     (setf (impl-param-uri param)
           (concatenate 'string
-                       (impl-param-base-uri param)
+                       (or (impl-param-base-uri param) *base-uri*)
                        ;;"https://github.com/roswell/sbcl_bin/releases/download/"
                        (impl-param-version param) ;;"2.3.7"
                        "/"
@@ -126,27 +88,22 @@
                            "-"
                            (format nil "-~A-" (impl-param-variant param)))
                        "binary.tar.bz2")))
-  (setf (impl-param-archive param)
-        (or (uiop:file-exists-p (impl-param-archive param))
-            (ensure-directories-exist
-             (merge-pathnames (format nil "archives/~A"
-                                      (file-namestring (impl-param-uri param)))
-                              (app-cachedir)))))
   (message :impl-download "Downlaad ~A/~A..."
            (impl-param-name param)
            (impl-param-version param))
   (message :impl-download "URI: ~A" (impl-param-uri param))
-  (message :impl-download "PATH: ~A" (impl-param-archive param))
-  (if (uiop:file-exists-p (impl-param-archive param))
-      (message :impl-download "PATH: ~A already exist. skip downloading." (impl-param-archive param))
-      (let ((code (download-simple (impl-param-uri param) (impl-param-archive param))))
-        (unless (zerop code)
-          (message :impl-download "Download failed (Code=~A)" code)
-          (uiop:quit 1))))
-  param)
+  (let ((archive (impl-archive-path param)))
+    (message :impl-download "PATH: ~A" archive)
+    (if (uiop:file-exists-p archive)
+        (message :impl-download "PATH: ~A already exist. skip downloading." archive)
+        (let ((code (download-simple (impl-param-uri param) archive)))
+          (unless (zerop code)
+            (message :impl-download "Download failed (Code=~A)" code)
+            (uiop:quit 1))))
+    param))
 
 (defun impl-expand (param)
-  (let ((archive (uiop:native-namestring (impl-param-archive param)))
+  (let ((archive (uiop:native-namestring (impl-archive-path param)))
         (dist-path (uiop:native-namestring 
                     (ensure-directories-exist (merge-pathnames "src/" (app-cachedir))))))
     (message :impl-expand "Extracting ~A to ~A" archive dist-path)
@@ -222,7 +179,7 @@
 (defun handler (cmd)
   "Handler for just evaluate options"
   (let ((param (make-instance
-                *param-class*
+                'impl-param
                 :name "sbcl"
                 :variant (or (and (equal (clingon:getopt cmd :variant) "")
                                   *default-variant*)
@@ -230,7 +187,7 @@
                              *default-variant*)
                 :os  (or (clingon:getopt cmd :os)          (uname-s))
                 :arch    (or (clingon:getopt cmd :arch)    (uname-m))
-                :base-uri(or (clingon:getopt cmd :base-uri)*base-uri*)
+                :base-uri(clingon:getopt cmd :base-uri)
                 :version (clingon:getopt cmd :version)
                 :uri (clingon:getopt cmd :uri)
                 :run ":roswell2.sbcl")))

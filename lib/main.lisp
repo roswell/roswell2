@@ -7,6 +7,7 @@
   (:import-from :clingon)
   (:import-from :cl-toml)
   (:export :impl-path
+           :impl-archive-path
            :impl-param
            :impl-param-name
            :impl-param-variant
@@ -40,23 +41,30 @@
            (impl-param-variant param))
    (app-cachedir)))
 
+(defun impl-archive-path (param)
+  (or (uiop:file-exists-p (impl-param-archive param))
+      (ensure-directories-exist
+       (merge-pathnames (format nil "archives/~A"
+                                (file-namestring (impl-param-uri param)))
+                        (app-cachedir)))))
+
 (defclass impl-param ()
   ((name
     :initarg :name
     :initform nil
-    :accessor impl-param-name)
+    :reader impl-param-name)
    (variant
     :initarg :variant
     :initform nil
-    :accessor impl-param-variant)
+    :reader impl-param-variant)
    (os
     :initarg :os
     :initform nil
-    :accessor impl-param-os)
+    :reader impl-param-os)
    (arch
     :initarg :arch
     :initform nil
-    :accessor impl-param-arch)
+    :reader impl-param-arch)
    (version
     :initarg :version
     :initform nil
@@ -64,7 +72,7 @@
    (base-uri
     :initarg :base-uri
     :initform nil
-    :accessor impl-param-base-uri)
+    :reader impl-param-base-uri)
    (uri
     :initarg :uri
     :initform nil
@@ -72,34 +80,27 @@
    (archive
     :initarg :archive
     :initform nil
-    :accessor impl-param-archive)
+    :reader impl-param-archive)
    (args
     :initarg :args
     :initform nil
-    :accessor impl-param-args)
+    :reader impl-param-args)
    (image
     :initarg :image
     :initform nil
-    :accessor impl-param-image)
+    :reader impl-param-image)
    (run-type
     :initarg :run
     :initform nil
-    :accessor impl-param-run)))
+    :reader impl-param-run)))
 
 (defmethod print-object ((param impl-param) stream)
   (format stream "~S"
           `(,(type-of param)
-            ,@(when (impl-param-name param) (list :name (impl-param-name param)))
-            ,@(when (impl-param-variant param) (list :variant (impl-param-variant param)))
-            ,@(when (impl-param-os param) (list :os (impl-param-os param)))
-            ,@(when (impl-param-arch param) (list :arch (impl-param-arch param)))
-            ,@(when (impl-param-version param) (list :version (impl-param-version param)))
-            ,@(when (impl-param-base-uri param) (list :base-uri (impl-param-base-uri param)))
-            ,@(when (impl-param-uri param) (list :uri (impl-param-uri param)))
-            ,@(when (impl-param-archive param) (list :archive (impl-param-archive param)))
-            ,@(when (impl-param-args param) (list :args (impl-param-args param)))
-            ,@(when (impl-param-image param) (list :image (impl-param-image param)))
-            ,@(when (impl-param-run param) (list :run (impl-param-run param))))))
+            ,@(loop for c in (sb-mop:class-slots (class-of param))
+                    for val = (slot-value param (sb-mop:slot-definition-name c))
+                    when val
+                    append (list (first (sb-mop:slot-definition-initargs c))  val)))))
 
 (defun string-start-with-filter (str)
   (let ((len (length str)))
