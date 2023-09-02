@@ -3,7 +3,8 @@
         :roswell-bin/config
         :roswell-bin/util
         :roswell-bin/uname
-        :roswell2/clingon.extensions)
+        :roswell2/clingon.extensions
+        )
   (:nicknames :roswell2)
   (:import-from :clingon)
   (:import-from :cl-toml)
@@ -14,6 +15,7 @@
            :impl-param-os*
            :impl-param-class
            :make-impl-param
+           :impl-set-run-param
            :impl-param
            :impl-param-name
            :impl-param-variant
@@ -81,10 +83,10 @@
     :initarg :image
     :initform nil
     :reader impl-param-image)
-   (run-type
+   (run
     :initarg :run
     :initform nil
-    :reader impl-param-run)))
+    :accessor impl-param-run)))
 
 (defmethod impl-path ((param impl-param))
   ;; "~/.cache/roswell/impl/sbcl/2.3.7/x86-64/linux/bin/"
@@ -119,24 +121,28 @@
   (declare (ignorable kind))
   'impl-param)
 
+(defmethod impl-set-run-param ((param impl-param)))
+
 (defun make-impl-param (kind cmd &key name args version run)
-  (let ((class (impl-param-class kind)))
-    (if (listp cmd)
-        (apply 'make-instance class
-               cmd)
-        (make-instance
-         class
-         :kind kind
-         :name (or name (clingon:getopt cmd :lisp))
-         :variant (clingon:getopt cmd :variant)
-         :os      (clingon:getopt cmd :os)
-         :arch    (clingon:getopt cmd :arch)
-         :version (or version
-                      (clingon:getopt cmd :version))
-         :args args
-         :uri     (clingon:getopt cmd :uri)
-         :base-uri(clingon:getopt cmd :base-uri)
-         :run run))))
+  (let* ((class (impl-param-class kind))
+         (impl (if (listp cmd)
+                   (apply 'make-instance class
+                          cmd)
+                   (make-instance
+                    class
+                    :kind kind
+                    :name (or name (clingon:getopt cmd :lisp))
+                    :variant (clingon:getopt cmd :variant)
+                    :os      (clingon:getopt cmd :os)
+                    :arch    (clingon:getopt cmd :arch)
+                    :version (or version (clingon:getopt cmd :version))
+                    :args args
+                    :uri     (clingon:getopt cmd :uri)
+                    :base-uri(clingon:getopt cmd :base-uri)
+                    :run run))))
+    (unless (impl-param-run impl)
+      (impl-set-run-param impl))
+    impl))
 
 (defmethod print-object ((param impl-param) stream)
   (format stream "~S"

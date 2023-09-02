@@ -3,6 +3,7 @@
         :roswell-bin/util
         :roswell-bin/uname
         :roswell2/main
+        :roswell2.cmd.install/main
         )
   (:nicknames :roswell2.cmd.run)
   (:import-from :clingon)
@@ -176,7 +177,7 @@
     (let* ((config (load-config :where :global))
            (impl  (clingon:getopt cmd :lisp))
            (version (or (clingon:getopt cmd :version)
-                        (and impl (config `(,impl "version") config))))
+                        (and impl (config `(,impl "version") config :if-does-not-exist nil))))
            (param (make-impl-param
                    (intern (string-upcase impl) :keyword)
                    cmd
@@ -184,13 +185,20 @@
                    :args args)))
       (unless impl
         (clingon:run cmd '("--help")))
+      (unless version
+        (impl-set-version-param param))
+      (message :main-handler "build param: ~S" param)
       (let ((sym (or
-                  (distinguish (intern impl :keyword)
-                               (intern version :keyword))
+                  (distinguish (and impl (intern impl :keyword))
+                               (and version (intern version :keyword)))
                   (ignore-errors
                     (let* (*read-eval*
-                           (form (uiop:read-file-form
-                                  (merge-pathnames "roswell.sexp" (impl-path param)))))
+                           (path (merge-pathnames "roswell.sexp" (impl-path param)))
+                           form)
+                      (unless (uiop:file-exists-p path)
+                        (message :main-handler "~S seems not exist... try install: ~S" path param)
+                        (install param))
+                      (setf form (uiop:read-file-form path))
                       (message :main-handler "read roswell.sexp: ~S" form)
                       (read-from-string (getf form :run)))))))
         (message :main-handler "just before run impl-path:~S sym:~S param:~S"

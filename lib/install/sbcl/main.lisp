@@ -29,10 +29,13 @@
    :arch-explanation (format nil "set arch for install. defualt:~A" (uname-m))
    :os-explanation (format nil "set os for install. default:~A" (uname-s))))
 
+(defclass sbcl-impl-param (impl-param)
+  ())
+
 (defun impl-tsv-uri (param)
   (format nil "~Afiles/sbcl-bin_uri.tsv" (or (impl-param-base-uri param) *base-uri*)))
 
-(defun impl-set-version-param (param)
+(defmethod impl-set-version-param ((param sbcl-impl-param))
   (let* ((tsv-uri  (impl-tsv-uri param))
          (tsv-path (merge-pathnames (format nil "tmp/~A" (file-namestring tsv-uri)) (app-cachedir))))
     (ensure-directories-exist tsv-path)
@@ -42,7 +45,7 @@
     (let ((code (download-simple tsv-uri tsv-path)))
       (unless (zerop code)
         (message :impl-set-version-param "Download failed (Code=~A)" code)
-        (uiop:quit 1)))
+        (return-from impl-set-version-param 1)))
     (loop for line in (cdr (uiop:read-file-lines tsv-path))
           for split = (uiop:split-string line)
           for system = (first split)
@@ -62,7 +65,7 @@
                         (impl-param-name param)
                         (impl-param-version param))
                (return-from impl-set-version-param param)))
-    (uiop:quit 1)))
+    (return-from impl-set-version-param 1)))
 
 (defun impl-already-installedp (param)
   ;;return executable-paths with multple-values
@@ -101,7 +104,7 @@
           (let ((code (download-simple uri archive)))
             (unless (zerop code)
               (message :impl-download "Download failed (Code=~A)" code)
-              (uiop:quit 1))))
+              (return-from impl-download 1))))
       param)))
 
 (defun impl-expand (param)
@@ -145,7 +148,7 @@
           (uiop:getenv "INSTALL_ROOT") (subseq* impl-path 0 -1))
     (unless (find-gnumake)
       (message :impl-install "'make' command not available.")
-      (uiop:quit 1))
+      (return-from impl-install 1))
     (uiop:run-program  
      (format nil "~A install.sh" (sh))
      :output :interactive
@@ -180,37 +183,41 @@
       (format o "~S~%" param))))
 
 
-(defclass sbcl-impl-param (impl-param)
-  ())
-
 (defmethod install ((param sbcl-impl-param))
   (unless (impl-param-version param)
-    (impl-set-version-param param))
+    (when (eql (impl-set-version-param param) 1)
+      (return-from install 1)))
   (when (impl-already-installedp param)
     (progn
       (message :main-handler "~A/~A(~A) is already installed."
                (impl-param-name param)
                (impl-param-version param)
                (impl-param-variant* param))
-      (uiop:quit 1)))
-  (impl-download param)
+      (return-from install 1)))
+  (when (eql (impl-download param) 1)
+    (return-from install 1))
   (impl-expand param)
-  (impl-install param)
+  (when (eql (impl-install param) 1)
+    (return-from install 1))
   #+linux
   (impl-patchelf param)
-  (impl-set-config param))
+  (impl-set-config param)
+  0)
 
 (defmethod impl-param-class ((kind (eql :sbcl)))
   (declare (ignorable kind))
   'sbcl-impl-param)
 
+(defmethod impl-set-run-param ((param sbcl-impl-param))
+  ;; tbd
+  (setf (impl-param-run param) ":roswell2.sbcl"))
+
 (defun handler (cmd)
   "Handler for just evaluate options"
   (let ((param (make-impl-param :sbcl cmd
-                                :name "sbcl"
-                                :run ":roswell2.sbcl")))
+                                :name "sbcl")))
     (message :main-handler "args-for install ~A  ~S"
              (impl-param-name param)
              (clingon:command-arguments cmd))
     (message :main-handler "version: ~S" (impl-param-version param))
-    (install param)))
+    (uiop:quit (install param))))

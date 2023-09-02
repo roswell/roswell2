@@ -6,7 +6,8 @@
   (:import-from :clingon)
   (:export :sh
            :option-base
-           :install))
+           :install
+           :impl-set-version-param))
    
 (in-package :roswell2.cmd.install/main)
 
@@ -65,6 +66,7 @@
     :key :archive)))
 
 (defmethod install ((param impl-param)))
+(defmethod impl-set-version-param ((param impl-param)))
 
 (defun sub-commands ()
   (sub-command-filter "roswell2.install."))
