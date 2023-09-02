@@ -36,35 +36,6 @@
 
 (in-package :roswell2/main)
 
-(defmethod impl-path ((param impl-param))
-  ;; "~/.cache/roswell/impl/sbcl/2.3.7/x86-64/linux/bin/"
-  (merge-pathnames
-   (format nil "impl/~A/~A/~A/~A/~A/"
-           (impl-param-name param)
-           (impl-param-version param)
-           (impl-param-os* param)
-           (impl-param-arch* param)
-           (impl-param-variant* param))
-   (app-cachedir)))
-
-(defmethod impl-archive-path ((param impl-param))
-  (or (and (impl-param-archive param)
-           (uiop:file-exists-p (impl-param-archive param)))
-      (ensure-directories-exist
-       (merge-pathnames (format nil "archives/~A"
-                                (concatenate 'string
-                                             (impl-param-name param) ;; "sbcl"
-                                             "-"
-                                             (impl-param-version param) ;;"2.3.7"
-                                             "-"
-                                             (impl-param-arch* param) ;;"x86-64"
-                                             "-"
-                                             (impl-param-os* param) ;;"linux"
-                                             "-"
-                                             (impl-param-variant* param)
-                                             "-binary.tar.bz2"))
-                        (app-cachedir)))))
-
 (defclass impl-param ()
   ((kind
     :initarg :kind
@@ -114,6 +85,35 @@
     :initarg :run
     :initform nil
     :reader impl-param-run)))
+
+(defmethod impl-path ((param impl-param))
+  ;; "~/.cache/roswell/impl/sbcl/2.3.7/x86-64/linux/bin/"
+  (merge-pathnames
+   (format nil "impl/~A/~A/~A/~A/~A/"
+           (impl-param-name param)
+           (impl-param-version param)
+           (impl-param-os* param)
+           (impl-param-arch* param)
+           (impl-param-variant* param))
+   (app-cachedir)))
+
+(defmethod impl-archive-path ((param impl-param))
+  (or (and (impl-param-archive param)
+           (uiop:file-exists-p (impl-param-archive param)))
+      (ensure-directories-exist
+       (merge-pathnames (format nil "archives/~A"
+                                (concatenate 'string
+                                             (impl-param-name param) ;; "sbcl"
+                                             "-"
+                                             (impl-param-version param) ;;"2.3.7"
+                                             "-"
+                                             (impl-param-arch* param) ;;"x86-64"
+                                             "-"
+                                             (impl-param-os* param) ;;"linux"
+                                             "-"
+                                             (impl-param-variant* param)
+                                             "-binary.tar.bz2"))
+                        (app-cachedir)))))
 
 (defmethod impl-param-class (kind)
   (declare (ignorable kind))
