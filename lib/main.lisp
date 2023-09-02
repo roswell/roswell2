@@ -2,12 +2,18 @@
   (:use :cl
         :roswell-bin/config
         :roswell-bin/util
+        :roswell-bin/uname
         :roswell2/clingon.extensions)
   (:nicknames :roswell2)
   (:import-from :clingon)
   (:import-from :cl-toml)
   (:export :impl-path
            :impl-archive-path
+           :impl-param-variant*
+           :impl-param-arch*
+           :impl-param-os*
+           :impl-param-class
+           :make-impl-param
            :impl-param
            :impl-param-name
            :impl-param-variant
@@ -30,26 +36,41 @@
 
 (in-package :roswell2/main)
 
-(defun impl-path (param)
+(defmethod impl-path ((param impl-param))
   ;; "~/.cache/roswell/impl/sbcl/2.3.7/x86-64/linux/bin/"
   (merge-pathnames
    (format nil "impl/~A/~A/~A/~A/~A/"
            (impl-param-name param)
            (impl-param-version param)
-           (impl-param-os param)
-           (impl-param-arch param)
-           (impl-param-variant param))
+           (impl-param-os* param)
+           (impl-param-arch* param)
+           (impl-param-variant* param))
    (app-cachedir)))
 
-(defun impl-archive-path (param)
-  (or (uiop:file-exists-p (impl-param-archive param))
+(defmethod impl-archive-path ((param impl-param))
+  (or (and (impl-param-archive param)
+           (uiop:file-exists-p (impl-param-archive param)))
       (ensure-directories-exist
        (merge-pathnames (format nil "archives/~A"
-                                (file-namestring (impl-param-uri param)))
+                                (concatenate 'string
+                                             (impl-param-name param) ;; "sbcl"
+                                             "-"
+                                             (impl-param-version param) ;;"2.3.7"
+                                             "-"
+                                             (impl-param-arch* param) ;;"x86-64"
+                                             "-"
+                                             (impl-param-os* param) ;;"linux"
+                                             "-"
+                                             (impl-param-variant* param)
+                                             "-binary.tar.bz2"))
                         (app-cachedir)))))
 
 (defclass impl-param ()
-  ((name
+  ((kind
+    :initarg :kind
+    :initform nil
+    :reader impl-param-kind)
+   (name
     :initarg :name
     :initform nil
     :reader impl-param-name)
@@ -76,7 +97,7 @@
    (uri
     :initarg :uri
     :initform nil
-    :accessor impl-param-uri)
+    :reader impl-param-uri)
    (archive
     :initarg :archive
     :initform nil
@@ -94,13 +115,54 @@
     :initform nil
     :reader impl-param-run)))
 
+(defmethod impl-param-class (kind)
+  (declare (ignorable kind))
+  'impl-param)
+
+(defun make-impl-param (kind cmd &key name args version run)
+  (let ((class (impl-param-class kind)))
+    (if (listp cmd)
+        (apply 'make-instance class
+               cmd)
+        (make-instance
+         class
+         :kind kind
+         :name (or name (clingon:getopt cmd :lisp))
+         :variant (clingon:getopt cmd :variant)
+         :os      (clingon:getopt cmd :os)
+         :arch    (clingon:getopt cmd :arch)
+         :version (or version
+                      (clingon:getopt cmd :version))
+         :args args
+         :uri     (clingon:getopt cmd :uri)
+         :base-uri(clingon:getopt cmd :base-uri)
+         :run run))))
+
 (defmethod print-object ((param impl-param) stream)
   (format stream "~S"
-          `(,(type-of param)
-            ,@(loop for c in (sb-mop:class-slots (class-of param))
-                    for val = (slot-value param (sb-mop:slot-definition-name c))
-                    when val
-                    append (list (first (sb-mop:slot-definition-initargs c))  val)))))
+          (loop for c in (sb-mop:class-slots (class-of param))
+                for val = (slot-value param (sb-mop:slot-definition-name c))
+                when val
+                append (list (first (sb-mop:slot-definition-initargs c))  val))))
+
+(defmethod impl-param-variant* ((param impl-param))
+  (let* ((impl (impl-param-name param))
+         (variant (impl-param-variant param))
+         (config (load-config :where :global))
+         (default (ignore-errors (symbol-value (read-from-string
+                                                (format nil "roswell2.install.~A:*default-variant*" impl))))))
+    (or (and (equal variant "") default)
+        variant
+        (config `(,impl "variant") config :if-does-not-exist nil)
+        default)))
+
+(defmethod impl-param-arch* ((param impl-param))
+  (or (impl-param-arch param)
+      (uname-m)))
+
+(defmethod impl-param-os* ((param impl-param))
+  (or (impl-param-os param)
+      (uname-s)))
 
 (defun string-start-with-filter (str)
   (let ((len (length str)))

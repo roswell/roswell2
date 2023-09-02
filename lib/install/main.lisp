@@ -6,7 +6,7 @@
   (:import-from :clingon)
   (:export :sh
            :option-base
-           ))
+           :install))
    
 (in-package :roswell2.cmd.install/main)
 
@@ -63,6 +63,8 @@
     :parameter "archivefile"
     :long-name "archive"
     :key :archive)))
+
+(defmethod install ((param impl-param)))
 
 (defun sub-commands ()
   (sub-command-filter "roswell2.install."))

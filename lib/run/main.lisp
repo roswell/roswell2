@@ -8,8 +8,7 @@
   (:import-from :clingon)
   (:export :run 
            :distinguish
-           :*forms* :impl-path
-           ))
+           :*forms* :impl-path))
 
 (in-package :roswell2.cmd.run/main)
 
@@ -178,18 +177,9 @@
            (impl  (clingon:getopt cmd :lisp))
            (version (or (clingon:getopt cmd :version)
                         (and impl (config `(,impl "version") config))))
-           (variant (or (clingon:getopt cmd :variant)
-                        (and impl
-                             (or
-                              (config `(,impl "variant") config :if-does-not-exist nil)
-                              (symbol-value (read-from-string
-                                             (format nil "roswell2.install.~A:*default-variant*" impl)))))))
-           (param (make-instance
-                   'impl-param
-                   :name impl
-                   :variant variant
-                   :os      (or (clingon:getopt cmd :os)      (uname-s))
-                   :arch    (or (clingon:getopt cmd :arch)    (uname-m))
+           (param (make-impl-param
+                   (intern (string-upcase impl) :keyword)
+                   cmd
                    :version version
                    :args args)))
       (unless impl
@@ -198,11 +188,11 @@
                   (distinguish (intern impl :keyword)
                                (intern version :keyword))
                   (ignore-errors
-                    (let (*read-eval*)
-                      (setf param (apply 'make-instance
-                                         (uiop:read-file-form
-                                          (merge-pathnames "roswell.sexp" (impl-path param))))))
-                    (uiop:safe-read-from-string (impl-param-run param))))))
+                    (let* (*read-eval*
+                           (form (uiop:read-file-form
+                                  (merge-pathnames "roswell.sexp" (impl-path param)))))
+                      (message :main-handler "read roswell.sexp: ~S" form)
+                      (read-from-string (getf form :run)))))))
         (message :main-handler "just before run impl-path:~S sym:~S param:~S"
                  (impl-path param) sym param)
         (if sym
