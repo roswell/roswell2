@@ -3,7 +3,8 @@
         :roswell-bin/util
         :roswell-bin/uname
         :roswell2/main
-        :roswell2.cmd.run)
+        :roswell2.cmd.run
+        :roswell2.cmd.install/main)
   (:nicknames :roswell2.cmd.pin)
   (:import-from :clingon))
 
@@ -21,21 +22,31 @@
          (config (load-config :where :local))
          (impl  (clingon.command:command-name cmd))
          (version (or (clingon:getopt cmd :version)
-                      (ignore-errors (config `(,impl "version") gconfig))))
-         (variant (clingon:getopt cmd :variant))
-         (os (clingon:getopt cmd :os))
-         (arch (clingon:getopt cmd :arch))
-         (args (clingon:command-arguments cmd)))
-    (setf (config `("pinned" ,impl "args") config)
-          `(,@(when version (list "--version" version))
-            ,@(when variant (list "--variant" variant))
-            ,@(when os (list "--os" os))
-            ,@(when arch (list "--arch" arch))
-            ,@(loop for (cmd . val) in (nreverse roswell2.cmd.run:*forms*)
-                    append `(,(format nil "--~A" (string-downcase cmd))
-                             ,@val))
-            "--" ,@args))
+                      (and impl (config `(,impl "version") gconfig :if-does-not-exist nil))))
+         (args (clingon:command-arguments cmd))
+         (forms (reverse roswell2.cmd.run:*forms*))
+         (param (make-impl-param
+                 (intern (string-upcase impl) :keyword)
+                 cmd
+                 :name impl
+                 :version version
+                 :args args
+                 :forms forms)))
+    (unless version
+      (impl-set-version-param param))
+    (let ((path (merge-pathnames "roswell.sexp" (impl-path param))))
+      (setf param (if (uiop:file-exists-p path)
+                      (uiop:safe-read-file-form path)
+                      (uiop:safe-read-from-string (format nil "~S" param)))))
+    (setf (getf param :args) args
+          (getf param :forms) (loop for (opt . val) in forms
+                                    append `(,(format nil "--~A" (string-downcase opt))
+                                             ,@val)))
+    (message :pin-sub-hanlder "pin param:~S" param)
+    (setf (config `("pinned" ,impl) config)
+          (format nil "~S" param))
     (save-config :config config :where :local)
+    (setf roswell2.cmd.run:*forms* nil)
     (let ((run (roswell2:command :roswell2.cmd.run)))
       (clingon:run run `(,impl "-e" "(format t \"~A ~A pinned~%\" (lisp-implementation-type) (lisp-implementation-version))")))))
 

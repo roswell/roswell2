@@ -86,7 +86,11 @@
    (run
     :initarg :run
     :initform nil
-    :accessor impl-param-run)))
+    :accessor impl-param-run)
+   (forms
+    :initarg :forms
+    :initform nil
+    :accessor impl-param-forms)))
 
 (defmethod impl-path ((param impl-param))
   ;; "~/.cache/roswell/impl/sbcl/2.3.7/x86-64/linux/bin/"
@@ -123,7 +127,7 @@
 
 (defmethod impl-set-run-param ((param impl-param)))
 
-(defun make-impl-param (kind cmd &key name args version run)
+(defun make-impl-param (kind cmd &key name args version run forms)
   (let* ((class (impl-param-class kind))
          (impl (if (listp cmd)
                    (apply 'make-instance class
@@ -139,6 +143,7 @@
                     :args args
                     :uri     (clingon:getopt cmd :uri)
                     :base-uri(clingon:getopt cmd :base-uri)
+                    :forms forms
                     :run run))))
     (unless (impl-param-run impl)
       (impl-set-run-param impl))
@@ -201,6 +206,7 @@
       (message :setup "load[~A]" config-lisp)
       (ignore-errors (load config-lisp))))
   (message :setup "dump stage2")
+  (setf *verbose* 0)
   (uiop:dump-image core-path :executable t))
 
 (defvar *sub-command-filter* (make-hash-table :test 'equal))
@@ -228,7 +234,7 @@
   (list
    (clingon:make-option
     :option-filter
-    :description "evaluate form while building"
+    :description "evaluate form for stage1"
     :parameter "FORM"
     :short-name #\e
     :long-name "eval"
@@ -238,7 +244,7 @@
     :key :eval)
    (clingon:make-option
     :option-filter
-    :description "load lisp FILE while building"
+    :description "load lisp FILE for stage1"
     :parameter "FILE"
     :short-name #\l
     :long-name "load"

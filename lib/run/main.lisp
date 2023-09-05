@@ -17,8 +17,7 @@
 (defvar *command-class* 'roswell2/clingon.extensions::run-command)
 
 (defun options ()
-  ;;tbd consider make it extensible from sub modules.
-  "Returns the options for the  command"
+  "Returns the options for run command"
   (list
    (clingon:make-option
     :string
@@ -116,22 +115,29 @@
   (let* ((name (clingon.command:command-name cmd))
          (run (roswell2:command :roswell2.cmd.run
                                 :name name)))
-    (message :sub-handler "sub-handler ~A config:~S cmd:~S forms:~S"
+    (message :sub-handler "run sub-handler ~A config:~S cmd:~S forms:~S"
              (clingon:command-name cmd)
-             (config `("pinned" ,name "args")
-                     *config*)
+             (config `("pinned" ,name) *config*)
              cmd
              *forms*)
-    (let* ((list (coerce (config `("pinned" ,name "args")
-                                 *config*) 'list))
-           (pos (position "--" list :test 'equal))
-           (first (subseq list 0 pos))
-           (last (subseq list (1+ pos)))
+    (let* ((list (uiop:safe-read-from-string (config `("pinned" ,name) *config*)))
+           (first (getf list :forms))
+           (last (getf list :args))
            (mid (loop for (opt . val) in (nreverse *forms*)
                       append `(,(format nil "--~A" (string-downcase opt))
                                ,@val)))
            (*forms* nil))
       (clingon:run run `("-L" ,name
+                         ,@(when (getf list :version)
+                             (list "--version" (getf list :version)))
+                         ,@(when (getf list :variant)
+                             (list "--variant" (getf list :variant)))
+                         ,@(when (getf list :os)
+                             (list "--os" (getf list :os)))
+                         ,@(when (getf list :arch)
+                             (list "--arch" (getf list :arch)))
+                         ,@(when (getf list :image)
+                             (list "--image" (getf list :image)))
                          ,@first
                          ,@(or mid '("--repl"))
                          "--" ,@last)))))
@@ -150,7 +156,7 @@
                         :description (format nil "launch ~A" name)
                         :options (loop for i in (options)
                                        unless (member (clingon.options:option-key i)
-                                                      '(:lisp :arch :variant :os :version :image))
+                                                      '(:lisp :arch :variant :os :version))
                                        collect i)
                         :handler 'sub-handler)
                        result))
@@ -192,15 +198,14 @@
                   (distinguish (and impl (intern impl :keyword))
                                (and version (intern version :keyword)))
                   (ignore-errors
-                    (let* (*read-eval*
-                           (path (merge-pathnames "roswell.sexp" (impl-path param)))
+                    (let* ((path (merge-pathnames "roswell.sexp" (impl-path param)))
                            form)
                       (unless (uiop:file-exists-p path)
                         (message :main-handler "~S seems not exist... try install: ~S" path param)
                         (install param))
                       (setf form (uiop:read-file-form path))
                       (message :main-handler "read roswell.sexp: ~S" form)
-                      (read-from-string (getf form :run)))))))
+                      (uiop:safe-read-from-string (getf form :run)))))))
         (message :main-handler "just before run impl-path:~S sym:~S param:~S"
                  (impl-path param) sym param)
         (if sym
