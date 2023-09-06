@@ -26,6 +26,7 @@
            :impl-param-uri
            :impl-param-archive
            :impl-param-args
+           :impl-param-native
            :impl-param-image
            :impl-param-run
            :setup
@@ -79,6 +80,10 @@
     :initarg :args
     :initform nil
     :reader impl-param-args)
+   (native
+    :initarg :native
+    :initform nil
+    :reader impl-param-native)
    (image
     :initarg :image
     :initform nil
@@ -143,6 +148,8 @@
                     :args args
                     :uri     (clingon:getopt cmd :uri)
                     :base-uri(clingon:getopt cmd :base-uri)
+                    :native  (clingon:getopt cmd :native)
+                    :image   (clingon:getopt cmd :image)
                     :forms forms
                     :run run))))
     (unless (impl-param-run impl)

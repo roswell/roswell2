@@ -54,7 +54,7 @@
   (loop with package = (find-package :roswell2.cmd.run)
         for i in (funcall (find-symbol (string '#:options) package))
         unless (or (member (clingon.options:option-key i)
-                           '(:quit :image :lisp :repl :dump))
+                           '(:quit :image :lisp :repl :dump :native))
                    (member i clingon.command:*default-options*))
         collect i))
 

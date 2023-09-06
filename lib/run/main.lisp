@@ -21,7 +21,7 @@
   (list
    (clingon:make-option
     :string
-    :description "Run roswell with a lisp impl NAME."
+    :description "designate lisp impl to run."
     :parameter "IMPL"
     :short-name #\L
     :long-name "lisp"
@@ -50,6 +50,11 @@
     :parameter "VERSION"
     :long-name "version"
     :key :version)
+   (clingon:make-option
+    :boolean/true
+    :description "run lisp implementation without special treat on options"
+    :long-name "native"
+    :key :native)
    (clingon:make-option
     :string
     :description "continue from Lisp image"
