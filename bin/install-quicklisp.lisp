@@ -32,7 +32,7 @@
 (defun install-quicklisp (&key
                           version
                           (dist-url "http://beta.quicklisp.org/dist/quicklisp.txt")
-                          (path (app-configdir))
+                          (path (app-cachedir))
                           (ql-path "quicklisp/"))
   (declare (ignorable dist-url))
   (let ((ql-path (merge-pathnames ql-path (ensure-directories-exist path))))

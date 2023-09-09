@@ -12,7 +12,7 @@
                         force)
   (message :build "build stage2 args => ~A path => ~A" args cache-path)
   (ensure-directories-exist config-path)
-  (install-quicklisp :path config-path :ql-path "quicklisp/")
+  (install-quicklisp :path cache-path :ql-path "quicklisp/")
   (message :build "build install quicklisp ~S done" config-path)
   (let ((asds-path (truename 
                     (merge-pathnames "../lib/roswell/"
@@ -24,7 +24,7 @@
                                "--eval" (format nil "(setf roswell-bin/util::*message-first-inovocation* ~A roswell-bin/util:*verbose* ~A)"
                                                 roswell-bin/util::*message-first-inovocation*
                                                 roswell-bin/util:*verbose*)
-                               "--load" (uiop:native-namestring (merge-pathnames "quicklisp/setup.lisp" config-path))
+                               "--load" (uiop:native-namestring (merge-pathnames "quicklisp/setup.lisp" cache-path))
                                "--eval" (format nil "(mapc (lambda (x) (asdf:load-asd x)) (directory \"~A*.asd\"))" asds-path)
                                "--eval" "(ql:quickload :roswell2)"
                                "--eval" (format nil "(roswell2/main:setup ~S ~S ~S)" config-path core-path asds-path))))
