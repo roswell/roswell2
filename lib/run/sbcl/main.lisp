@@ -28,7 +28,8 @@
          (args (if pos (subseq args 0 pos) args))
          ret
          help
-         (image (impl-param-image param)))
+         (image (impl-param-image param))
+         (quicklisp (impl-param-quicklisp param)))
     (message :run "set SBCL_HOME ~S" (uiop:native-namestring sbcl-home))
     (setf (uiop:getenv "SBCL_HOME") (uiop:native-namestring sbcl-home))
     (push (uiop:native-namestring (merge-pathnames (format nil "bin/sbcl~A" (exeext)) impl-path)) ret)
@@ -50,8 +51,11 @@
       (push (format nil "(progn #-roswell2.run.sbcl/init (cl:load ~S))" (init.lisp-path)) ret)
       (push "--eval" ret)
       (push (format nil "(roswell.init:main '~S)"
-                    (append `((:eval ,(format nil "(setf roswell.init:*impl-path* ~S)" impl-path)))
-                            (or roswell2.cmd.run:*forms*
+                    (append `((:eval ,(format nil "(setf roswell.init:*impl-path* ~S)" impl-path))
+                              (:eval ,(format nil "(setf roswell.init:*cache-path* ~S)" (app-cachedir)))
+                              ,@(when quicklisp
+                                  '((:quicklisp quicklisp))))
+                            (or *forms*
                                 '((:repl)))))
             ret))
     (setf ret (nreverse ret))

@@ -25,43 +25,50 @@
     :parameter "IMPL"
     :short-name #\L
     :long-name "lisp"
+    :category "Implementation designation options"
     :key :lisp)
    (clingon:make-option
     :string
     :description (format nil "set arch. defualt:~A" (uname-m))
     :parameter "ARCH"
     :long-name "arch"
+    :category "Implementation designation options"
     :key :arch)
    (clingon:make-option
     :string
     :description "set variant"
     :parameter "VARIANT"
     :long-name "variant"
+    :category "Implementation designation options"
     :key :variant)
    (clingon:make-option
     :string
     :description (format nil "set os. default:~A" (uname-s))
     :parameter "OS"
     :long-name "os"
+    :category "Implementation designation options"
     :key :os)
    (clingon:make-option
     :string
     :description "set version"
     :parameter "VERSION"
     :long-name "version"
+    :category "Implementation designation options"
     :key :version)
    (clingon:make-option
-    :boolean/true
-    :description "run lisp implementation without special treat on options"
-    :long-name "native"
-    :key :native)
-   (clingon:make-option
     :string
-    :description "continue from Lisp image"
-    :parameter "IMAGE"
-    :short-name #\m
-    :long-name "image"
-    :key :image)
+    :description "Run lisp with Quicklisp which home set to PATH"
+    :parameter "PATH"
+    :long-name "qlpath"
+    :category "Quicklisp"
+    :key :quicklisp-path)
+   (clingon:make-option
+    :boolean/true
+    :description (format nil "Run lisp with Quicklisp home=~S" (ql:qmerge ""))
+    :short-name #\Q
+    :long-name "quicklisp"
+    :category "Quicklisp"
+    :key :quicklisp)
    (clingon:make-option
     :option-filter
     :description "evaluate form"
@@ -72,6 +79,7 @@
               (declare (ignore option))
               (push (list :eval x) *forms*)
               nil)
+    :category "Runtime options"
     :key :eval)
    (clingon:make-option
     :option-filter
@@ -83,6 +91,7 @@
               (declare (ignore option))
               (push (list :load x) *forms*)
               nil)
+    :category "Runtime options"
     :key :load)
    (clingon:make-option
     :option-filter
@@ -93,6 +102,7 @@
               (declare (ignore x option))
               (push (list :quit) *forms*)
               nil)
+    :category "Runtime options"
     :key :quit)
    (clingon:make-option
     :option-filter
@@ -102,6 +112,7 @@
               (declare (ignore x option))
               (push (list :repl) *forms*)
               nil)
+    :category "Runtime options"
     :key :repl)
    (clingon:make-option
     :option-filter
@@ -112,7 +123,22 @@
               (declare (ignore option))
               (push (list :dump x) *forms*)
               nil)
-    :key :dump)))
+    :category "Runtime options"
+    :key :dump)
+   (clingon:make-option
+    :boolean/true
+    :description "run lisp implementation without runtime option processing"
+    :long-name "native"
+    :category "Runtime options"
+    :key :native)
+   (clingon:make-option
+    :string
+    :description "continue from Lisp image"
+    :parameter "IMAGE"
+    :short-name #\m
+    :long-name "image"
+    :category "Runtime options"
+    :key :image)))
 
 (defvar *config* nil)
 

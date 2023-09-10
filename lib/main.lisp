@@ -28,6 +28,7 @@
            :impl-param-args
            :impl-param-native
            :impl-param-image
+           :impl-param-quicklisp
            :impl-param-run
            :setup
            :main
@@ -84,6 +85,10 @@
     :initarg :native
     :initform nil
     :reader impl-param-native)
+   (quicklisp
+    :initarg :quicklisp
+    :initform nil
+    :reader impl-param-quicklisp)
    (image
     :initarg :image
     :initform nil
@@ -149,6 +154,14 @@
                     :uri     (clingon:getopt cmd :uri)
                     :base-uri(clingon:getopt cmd :base-uri)
                     :native  (clingon:getopt cmd :native)
+                    :quicklisp (or
+                                (and (clingon:getopt cmd :quicklisp-path)
+                                     (or (uiop:directory-exists-p
+                                          (ensure-directories-exist
+                                           (pathname-directory (clingon:getopt cmd :quicklisp-path))))
+                                         (message :make-impl-param "~S is not taken as quicklisp directory"
+                                                  (clingon:getopt cmd :quicklisp-path))))
+                                (clingon:getopt cmd :quicklisp))
                     :image   (clingon:getopt cmd :image)
                     :forms forms
                     :run run))))
