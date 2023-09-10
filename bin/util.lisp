@@ -31,7 +31,8 @@
 (defun message (&rest r)
   (unless *message-first-inovocation*
     (setf *message-first-inovocation* (get-internal-run-time)))
-  (apply *message* r))
+  (apply *message* r)
+  nil)
 
 (defvar *strip-run-cmd-hash* (make-hash-table :test 'equal))
 
