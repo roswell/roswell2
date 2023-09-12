@@ -137,7 +137,14 @@
 
 (defmethod impl-set-run-param ((param impl-param)))
 
-(defun make-impl-param (kind cmd &key name args version run forms)
+(defun make-impl-param (kind cmd &key
+                                 name
+                                 args
+                                 version
+                                 run
+                                 forms
+                                 (image nil image-p)
+                                 (quicklisp nil quicklisp-p))
   (let* ((class (impl-param-class kind))
          (impl (if (listp cmd)
                    (apply 'make-instance class
@@ -154,15 +161,17 @@
                     :uri     (clingon:getopt cmd :uri)
                     :base-uri(clingon:getopt cmd :base-uri)
                     :native  (clingon:getopt cmd :native)
-                    :quicklisp (or
-                                (and (clingon:getopt cmd :quicklisp-path)
-                                     (or (uiop:directory-exists-p
-                                          (ensure-directories-exist
-                                           (pathname-directory (clingon:getopt cmd :quicklisp-path))))
-                                         (message :make-impl-param "~S is not taken as quicklisp directory"
-                                                  (clingon:getopt cmd :quicklisp-path))))
-                                (clingon:getopt cmd :quicklisp))
-                    :image   (clingon:getopt cmd :image)
+                    :quicklisp (if quicklisp-p
+                                   quicklisp
+                                   (or
+                                    (and (clingon:getopt cmd :quicklisp-path)
+                                         (or (uiop:directory-exists-p
+                                              (ensure-directories-exist
+                                               (pathname-directory (clingon:getopt cmd :quicklisp-path))))
+                                             (message :make-impl-param "~S is not taken as quicklisp directory"
+                                                      (clingon:getopt cmd :quicklisp-path))))
+                                    (clingon:getopt cmd :quicklisp)))
+                    :image (if image-p image (clingon:getopt cmd :image))
                     :forms forms
                     :run run))))
     (unless (impl-param-run impl)
@@ -250,7 +259,7 @@
     command))
 
 (defun options ()
-  "Returns the options for the  command"
+  "Returns the options for the toplevel command"
   (list
    (clingon:make-option
     :option-filter
@@ -318,9 +327,14 @@
 
 (defun main ()
   (setf *stage2-path* (first (uiop/image:raw-command-line-arguments)))
-  (let ((command (command "roswell2" :name (pathname-name *stage1-path*))))
+  (let* ((command (command "roswell2" :name (pathname-name *stage1-path*)))
+         (args (cdr (uiop/image:raw-command-line-arguments)))
+         (pos (position "--" args :test 'equal)))
     (clingon:run command
-                 (cdr (uiop/image:raw-command-line-arguments)))))
+                 (if (ignore-errors
+                       (uiop:file-exists-p (nth (1+ pos) args)))
+                     (cons "script" args)
+                     args))))
 
 (defun toml-path (where)
   (let ((global-directory (app-cachedir))
