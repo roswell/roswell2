@@ -67,10 +67,12 @@ quicklisp/local-projects/cl-curl/curl.fasl: quicklisp/setup.lisp
 	  --quit
 
 linkage-info.sexp: quicklisp/local-projects/cl-curl/curl.fasl
-	sbcl \
+	sbcl --non-interactive \
 	  --eval "(require :asdf)" \
 	  --eval "(require :sb-posix)" \
 	  --eval "(require :sb-bsd-sockets)" \
+	  --eval "(require :sb-introspect)" \
+	  --eval "(require :sb-cltl2)" \
 	  --load $< \
 	  --eval "(cl-curl:init)" \
 	  --eval "#+unix(sb-alien:define-alien-routine (\"execvp\" %execvp) sb-alien:int(program sb-alien:c-string)(argv (* sb-alien:c-string)))" \
@@ -79,10 +81,7 @@ linkage-info.sexp: quicklisp/local-projects/cl-curl/curl.fasl
 	  --quit
 
 linkage-table-prelink-info-override.c: linkage-info.sexp
-	sbcl \
-	  --script /tmp/sbcl/tools-for-build/create-linkage-table-prelink-info-override.lisp \
-	  linkage-info.sexp \
-	  linkage-table-prelink-info-override.c
+	sbcl --script /tmp/sbcl/tools-for-build/create-linkage-table-prelink-info-override.lisp $< $@
 
 %.o: %.c
 	while read l; do \
@@ -91,13 +90,14 @@ linkage-table-prelink-info-override.c: linkage-info.sexp
 	&& $$CC $$CFLAGS -Wno-builtin-declaration-mismatch -o $@ -c $<
 
 sbcl.core: quicklisp/local-projects/cl-curl/curl.fasl
-	sbcl \
+	sbcl --non-interactive \
 	  --eval "(require :asdf)" \
 	  --eval "(require :sb-posix)" \
 	  --eval "(require :sb-bsd-sockets)" \
 	  --eval "(require :sb-introspect)" \
 	  --eval "(require :sb-cltl2)" \
 	  --load $< \
+	  --eval "#+unix(sb-alien:define-alien-routine (\"execvp\" %execvp) sb-alien:int(program sb-alien:c-string)(argv (* sb-alien:c-string)))" \
 	  --eval '(uiop:dump-image "$@" :compression t)'
 
 alpine-sbcl: linkage-table-prelink-info-override.o sbcl.core
