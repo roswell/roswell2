@@ -210,7 +210,7 @@
 
 (defmethod impl-set-run-param ((param sbcl-impl-param))
   ;; tbd
-  (setf (impl-param-run param) ":roswell2.sbcl"))
+  (setf (impl-param-run param) :roswell2.sbcl))
 
 (defun handler (cmd)
   "Handler for just evaluate options"

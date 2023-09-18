@@ -17,6 +17,7 @@
            :make-impl-param
            :impl-set-run-param
            :impl-param
+           :impl-param-kind
            :impl-param-name
            :impl-param-variant
            :impl-param-os

@@ -15,6 +15,7 @@
 
 (defvar *forms* nil)
 (defvar *command-class* 'roswell2/clingon.extensions::run-command)
+(defvar *category-implementation-option* "Implementation designation options")
 
 (defun options ()
   "Returns the options for run command"
@@ -25,35 +26,35 @@
     :parameter "IMPL"
     :short-name #\L
     :long-name "lisp"
-    :category "Implementation designation options"
+    :category *category-implementation-option*
     :key :lisp)
    (clingon:make-option
     :string
     :description (format nil "set arch. defualt:~A" (uname-m))
     :parameter "ARCH"
     :long-name "arch"
-    :category "Implementation designation options"
+    :category *category-implementation-option*
     :key :arch)
    (clingon:make-option
     :string
     :description "set variant"
     :parameter "VARIANT"
     :long-name "variant"
-    :category "Implementation designation options"
+    :category *category-implementation-option*
     :key :variant)
    (clingon:make-option
     :string
     :description (format nil "set os. default:~A" (uname-s))
     :parameter "OS"
     :long-name "os"
-    :category "Implementation designation options"
+    :category *category-implementation-option*
     :key :os)
    (clingon:make-option
     :string
     :description "set version"
     :parameter "VERSION"
     :long-name "version"
-    :category "Implementation designation options"
+    :category *category-implementation-option*
     :key :version)
    (clingon:make-option
     :string
@@ -194,7 +195,7 @@
                hash))
     result))
 
-(defgeneric run (kind param config cmd)
+(defgeneric run (kind param config cmd &key exec &allow-other-keys)
   (:documentation "run"))
 
 (defgeneric distinguish (impl version)
@@ -236,7 +237,7 @@
                         (install param))
                       (setf form (uiop:read-file-form path))
                       (message :main-handler "read roswell.sexp: ~S" form)
-                      (uiop:safe-read-from-string (getf form :run)))))))
+                      (getf form :run))))))
         (message :main-handler "just before run impl-path:~S sym:~S param:~S"
                  (impl-path param) sym param)
         (if sym

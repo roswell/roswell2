@@ -1,8 +1,8 @@
 (defpackage :roswell2.run.sbcl/init
   (:use :cl)
-  (:nicknames :roswell.init)
+  (:nicknames :roswell.init :ros)
   (:shadow :load :eval)
-  (:export :main :*load* :*impl-path* :*cache-path*))
+  (:export :main :*load* :*impl-path* :*cache-path* :ensure-asdf))
 (in-package :roswell2.run.sbcl/init)
 
 (defparameter *load* `((identity . cl:load)))
@@ -13,13 +13,17 @@
 (defvar *dump-option* nil)
 (defvar *repl-function* nil)
 
+(defun ensure-asdf (&key (version))
+  (declare (ignore version))
+  (require :asdf))
+
 (defun asdf (&rest rest)
   (declare (ignorable rest))
-  (require :asdf))
+  (ensure-asdf))
 
 (defun quicklisp (path-or-t &rest rest)
   (declare (ignorable rest))
-  (asdf)
+  (ensure-asdf)
   (flet ((re (&rest r) (cl:eval (read-from-string (apply 'format nil r)))))
     (let* ((ql-origin (merge-pathnames  "quicklisp/" *cache-path*))
            (setup (merge-pathnames "setup.lisp"
@@ -28,7 +32,7 @@
                                        path-or-t))))
       (re "(push ~S asdf:*central-registry*)"
           (merge-pathnames  "quicklisp/" ql-origin))
-      (unless (probe-file setup)
+      (unless (probe-file (ensure-directories-exist setup))
         (re "(uiop:copy-file ~S ~S)"
             (merge-pathnames "setup.lisp" ql-origin)
             setup))
@@ -66,7 +70,10 @@
         for sym = (intern (string (first elt)) package)
         do (apply sym (rest elt)))
   (when *dump-file*
-    (apply 'sb-ext:save-lisp-and-die *dump-file* *dump-option*))
+    (let ((dump-file *dump-file*))
+      (setf *dump-file* nil)
+      (ensure-directories-exist dump-file)
+      (apply 'sb-ext:save-lisp-and-die dump-file *dump-option*)))
   (when *run-repl*
     (sb-ext:enable-debugger)
     (if *repl-function*
