@@ -15,6 +15,10 @@ uninstall:
 	rm -f $(PREFIX)/$(TARGET)
 
 ####
+#dev.
+VERSION= $(shell grep :version lib/roswell2.asd |sed 's/^.*"\(.*\)".*$$/\1/')
+# " lem fail
+ARCHIVE=roswell-$(VERSION)-$(shell uname -m)-$(shell uname -s)
 # invoke linux
 # alpine for building environment.
 alpine:
@@ -148,6 +152,13 @@ clean:
 	rm -f *.o
 	rm -f linkage-table-prelink-info-override.c
 
-download:
-	ros roswell-internal-use download https://github.com/roswell/sbcl_bin/releases/download/2.3.6/sbcl-2.3.6-arm64-linux-musl-binary.tar.bz2 ./sbcl-2.3.6-arm64-linux-musl-binary.tar.bz2
-.PHONY: alpine ubuntu clean install uninstall
+archive: $(TARGET)
+	mkdir $(ARCHIVE)
+	mkdir $(ARCHIVE)/bin
+	mkdir $(ARCHIVE)/lib
+	cp $(TARGET) $(ARCHIVE)/bin
+	cp -r lib/* $(ARCHIVE)/lib
+	sed -n "/####/q;p" Makefile > $(ARCHIVE)/Makefile
+	tar jcvf $(ARCHIVE).tbz $(ARCHIVE)
+
+.PHONY: alpine ubuntu clean install uninstall archive
