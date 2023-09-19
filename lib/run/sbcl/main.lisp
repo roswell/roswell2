@@ -14,7 +14,7 @@
     (asdf:find-system :roswell2.run.sbcl))))
 
 (defmethod run ((kind (eql :roswell2.sbcl))
-                param config cmd &key exec)
+                param config cmd &key (exec 'exec))
   "run sbcl installed on cachedir"
   (message :run "check params ~S"
            (list :config config
@@ -60,5 +60,5 @@
             ret))
     (setf ret (nreverse ret))
     (message :run-sbcl "run-sbcl:~S" ret)
-    (exec ret)))
+    (funcall exec ret)))
 ;;; https://thinca.hatenablog.com/entry/20100210/1265813598

@@ -9,6 +9,7 @@
            :app-cachedir
            :setup-uid
            :subseq*
+           :run-program
            :exec
            :*verbose*
            ))
@@ -145,8 +146,13 @@
                     (error "execvp(3) failed. (Code=~D)" errno))))))
         (sb-alien:free-alien a-args)))))
 
+(defun run-program (args)
+  (uiop:run-program args
+                    :output :interactive
+                    :error-output :interactive))
+
 (defun exec (args)
   "Launch executable"
   #+unix
   (execvp (first args) args)
-  (uiop:quit (uiop:run-program args :output :interactive)))
+  (uiop:quit (run-program args)))
