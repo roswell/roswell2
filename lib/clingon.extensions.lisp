@@ -89,3 +89,11 @@
 (defclass run-command (command-without-version
                        stop-parse-when-free-argument-comes-command)
   ())
+
+(defclass root-command (clingon:command) ())
+
+(defmethod clingon:print-version ((command root-command) stream &key)
+  (when (clingon:command-version command)
+    (format stream
+            "roswell ~A()~&"
+            (clingon:command-version command))))

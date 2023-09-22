@@ -41,6 +41,8 @@
 
 (in-package :roswell2/main)
 
+(defvar *command-class* 'roswell2/clingon.extensions::root-command)
+
 (defclass impl-param ()
   ((kind
     :initarg :kind
