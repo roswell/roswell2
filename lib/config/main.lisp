@@ -73,7 +73,10 @@
 (defun show (cmd)
   (multiple-value-bind (config path) 
       (config-file cmd)
-    (message :show "config: ~A path: ~A" config path)
-    (with-open-file (in path)
-      (format t "~A~%" (uiop:read-file-string in)))))
-    
+    (message :config-show "config: ~A path: ~A" config path)
+    (when path
+      (if (uiop:file-exists-p path)
+          (with-open-file (in path)
+            (format t "~A" (uiop:read-file-string in)))
+          (progn
+            (format *error-output* "~A not exists.~%" path))))))

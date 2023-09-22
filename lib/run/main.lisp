@@ -215,7 +215,9 @@
     (let* ((config (load-config :where :user))
            (impl  (clingon:getopt cmd :lisp))
            (version (or (clingon:getopt cmd :version)
-                        (and impl (config `(,impl "version") config :if-does-not-exist nil))))
+                        (and impl
+                             (or (config `(,impl "version") *config* :if-does-not-exist nil)
+                                 (config `(,impl "version") config :if-does-not-exist nil)))))
            (param (make-impl-param
                    (intern (string-upcase impl) :keyword)
                    cmd
