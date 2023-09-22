@@ -349,10 +349,11 @@
                     (where :local)
                     (default (make-hash-table :test 'equal)))
   (let ((path (toml-path where)))
-    (if (uiop:file-exists-p path)
-        (or (ignore-errors (cl-toml:parse-file path))
-            (message :impl-set-config "broken ~A" path))
-        default)))
+    (values (if (uiop:file-exists-p path)
+                (or (ignore-errors (cl-toml:parse-file path))
+                    (message :impl-set-config "broken ~A" path))
+                default)
+            path)))
 
 (defun save-config (&key 
                     config
@@ -413,7 +414,11 @@
                       &key
                       debug)
   (let ((hash (rhash keys config :result :hash :if-does-not-exist :create :debug debug)))
-    (setf (gethash (first (last keys)) hash) val)))
+    (if val
+        (setf (gethash (first (last keys)) hash) val)
+        (progn
+          (remhash (first (last keys)) hash)
+          nil))))
 
 #+nil
 (let ((config (load-config :where :user)))
