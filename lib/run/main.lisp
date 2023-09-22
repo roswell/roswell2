@@ -212,7 +212,7 @@
     (message :main-handler "args-for run handler ~S forms:~S name:~S"
              args *forms*
              (clingon:command-name cmd))
-    (let* ((config (load-config :where :global))
+    (let* ((config (load-config :where :user))
            (impl  (clingon:getopt cmd :lisp))
            (version (or (clingon:getopt cmd :version)
                         (and impl (config `(,impl "version") config :if-does-not-exist nil))))

@@ -18,7 +18,7 @@
   (message :pin-sub-hanlder  "sub-handler for pin ~S" cmd)
   (message :pin-sub-hanlder  "args ~S" (clingon:command-arguments cmd))
   (message :pin-sub-hanlder  "forms ~S" roswell2.cmd.run:*forms*)
-  (let* ((gconfig (load-config :where :global))
+  (let* ((gconfig (load-config :where :user))
          (config (load-config :where :local))
          (impl  (clingon.command:command-name cmd))
          (version (or (clingon:getopt cmd :version)

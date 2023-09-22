@@ -189,7 +189,7 @@
 (defmethod impl-param-variant* ((param impl-param))
   (let* ((impl (impl-param-name param))
          (variant (impl-param-variant param))
-         (config (load-config :where :global))
+         (config (load-config :where :user))
          (default (ignore-errors (symbol-value (read-from-string
                                                 (format nil "roswell2.install.~A:*default-variant*" impl))))))
     (or (and (equal variant "") default)
@@ -338,11 +338,11 @@
                      args))))
 
 (defun toml-path (where)
-  (let ((global-directory (app-cachedir))
+  (let ((user-directory (app-cachedir))
         (local-directory (uiop:getcwd)))
     (case where
       (:local (merge-pathnames ".roswell-config.toml" local-directory))
-      (:global (merge-pathnames "config.toml" global-directory))
+      (:user (merge-pathnames "config.toml" user-directory))
       (t (error "invalid where eparameter for config")))))
 
 (defun load-config (&key
@@ -416,7 +416,7 @@
     (setf (gethash (first (last keys)) hash) val)))
 
 #+nil
-(let ((config (load-config :where :global)))
+(let ((config (load-config :where :user)))
   (setf (config '("sbcl" "variant") config) "hoge")
   (setf (config '("sbcl" "version") config) "hoge2")
   

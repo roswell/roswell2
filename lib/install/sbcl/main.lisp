@@ -172,11 +172,11 @@
 (defun impl-set-config (param)
   (let* ((variant (impl-param-variant* param))
          (version (impl-param-version param))
-         (config (load-config :where :global))
+         (config (load-config :where :user))
          (name (impl-param-name param)))
     (unless (config `(,name "variant") config :if-does-not-exist nil) (setf (config `(,name "variant") config) variant))
     (unless (config `(,name "version") config :if-does-not-exist nil) (setf (config `(,name "version") config) version))
-    (save-config :config config :where :global)
+    (save-config :config config :where :user)
     (with-open-file (o (merge-pathnames "roswell.sexp" (impl-path param))
                        :direction :output
                        :if-exists :supersede)

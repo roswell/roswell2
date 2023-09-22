@@ -73,7 +73,7 @@
 
 (defun handler (cmd)
   "Handler for just evaluate options"
-  (let* ((config (load-config :where :global))
+  (let* ((config (load-config :where :user))
          (args (clingon:command-arguments cmd))
          (impl (or (clingon:getopt cmd :lisp) "sbcl"))
          (version (or (clingon:getopt cmd :version)
