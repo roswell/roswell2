@@ -5,7 +5,7 @@
         :roswell-bin/uname
         :roswell2/main
         :roswell2.cmd.run
-        :roswell2.cmd.install/main)
+        :roswell2.impl.install)
   (:nicknames :roswell2.cmd.config)
   (:import-from :clingon))
 
@@ -68,7 +68,9 @@
       (let ((new-result (with-output-to-string (o) (cl-toml:encode config o))))
         (unless (equal orig-result new-result)
           (with-open-file (o path :direction :output :if-exists :supersede)
-            (format o "~A~%" new-result)))))))
+            (format o "~A~%" new-result)))))
+    (unless (clingon:command-arguments cmd)
+      (clingon:run cmd '("--help")))))
 
 (defun show (cmd)
   (multiple-value-bind (config path) 

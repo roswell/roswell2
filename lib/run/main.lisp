@@ -3,7 +3,7 @@
         :roswell-bin/util
         :roswell-bin/uname
         :roswell2/main
-        :roswell2.cmd.install/main
+        :roswell2.impl.install
         )
   (:nicknames :roswell2.cmd.run)
   (:import-from :clingon)

@@ -4,7 +4,7 @@
         :roswell-bin/uname
         :roswell2/main
         :roswell2.cmd.run
-        :roswell2.cmd.install/main)
+        :roswell2.impl.install)
   (:nicknames :roswell2.cmd.pin)
   (:import-from :clingon))
 

@@ -5,7 +5,7 @@
         :roswell-bin/uname
         :roswell2/main
         :roswell2.cmd.run
-        :roswell2.cmd.install/main)
+        :roswell2.impl.install)
   (:nicknames :roswell2.cmd.script)
   (:import-from :clingon)
   (:import-from :sb-md5))
@@ -112,12 +112,14 @@
                            :defaults (translate-pathname 
                                       script
                                       "/**/*.*" (merge-pathnames "core/**/*.*" impl-path)))
-            ql (make-pathname
-                :name nil
-                :type nil
-                :defaults (translate-pathname 
-                           script
-                           "/**/*.*" (merge-pathnames "quicklisp/**/*.*" impl-path))))
+            ql (merge-path
+                (format nil "~A/" (pathname-name script))
+                (make-pathname
+                 :name nil
+                 :type nil
+                 :defaults (translate-pathname
+                            script
+                            "/**/*.*" (merge-pathnames "quicklisp/**/*.*" impl-path)))))
       (message :script-handler "image-path: ~S" image)
       (message :script-handler "ql-path: ~S" ql)
       (message :script-handler "forms: ~S" *forms*)

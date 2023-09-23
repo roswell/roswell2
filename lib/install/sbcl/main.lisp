@@ -4,7 +4,7 @@
         :roswell-bin/download
         :roswell-bin/util
         :roswell-bin/uname
-        :roswell2.cmd.install
+        :roswell2.impl.install
         :roswell2/main)
   (:nicknames :roswell2.install.sbcl)
   (:import-from :clingon)
