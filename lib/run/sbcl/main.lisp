@@ -30,8 +30,6 @@
          help
          (image (impl-param-image param))
          (quicklisp (impl-param-quicklisp param)))
-    (message :run "set SBCL_HOME ~S" (uiop:native-namestring sbcl-home))
-    (setf (uiop:getenv "SBCL_HOME") (uiop:native-namestring sbcl-home))
     (push (uiop:native-namestring (merge-pathnames (format nil "bin/sbcl~A" (exeext)) impl-path)) ret)
     (loop while runtime-options
           do (push (pop runtime-options) ret))
