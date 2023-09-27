@@ -1,7 +1,7 @@
 PREFIX?=/usr/local
 INSTALL_BIN=$(PREFIX)/bin
 LIBRARY_PATH=$(PREFIX)/lib
-TARGET=bin/ros
+TARGET=bin/lisp
 
 all: $(TARGET)
 

@@ -36,7 +36,7 @@
                               "#!/bin/sh"
                               "#|-*- mode:lisp -*-|#"
                               "#|"
-                              "exec ros -Q -- $0 \"$@\"" "|#"
+                              "exec lisp -- $0 \"$@\"" "|#"
                               "(progn ;;init forms"
                               "  (ros:ensure-asdf)"
                               (let ((lib (getf params :|lib|)))
