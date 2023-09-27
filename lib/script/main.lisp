@@ -112,7 +112,7 @@
                            :defaults (translate-pathname 
                                       script
                                       "/**/*.*" (merge-pathnames "core/**/*.*" impl-path)))
-            ql (merge-path
+            ql (merge-pathnames
                 (format nil "~A/" (pathname-name script))
                 (make-pathname
                  :name nil
