@@ -24,19 +24,21 @@
 (defun quicklisp (path-or-t &rest rest)
   (declare (ignorable rest))
   (ensure-asdf)
-  (flet ((re (&rest r) (cl:eval (read-from-string (apply 'format nil r)))))
-    (let* ((ql-origin (merge-pathnames  "quicklisp/" *cache-path*))
-           (setup (merge-pathnames "setup.lisp"
-                                   (if (eql t path-or-t)
-                                       ql-origin
-                                       path-or-t))))
-      (re "(push ~S asdf:*central-registry*)"
-          (merge-pathnames  "quicklisp/" ql-origin))
-      (unless (probe-file (ensure-directories-exist setup))
-        (re "(uiop:copy-file ~S ~S)"
-            (merge-pathnames "setup.lisp" ql-origin)
-            setup))
-      (cl:load setup))))
+  (unless (find :quicklisp *features*)
+    (flet ((re (&rest r) (cl:eval (read-from-string (apply 'format nil r)))))
+      (let* ((ql-origin (merge-pathnames  "quicklisp/" *cache-path*))
+             (setup (merge-pathnames "setup.lisp"
+                                     (if (eql t path-or-t)
+                                         ql-origin
+                                         path-or-t))))
+        (unless (eql t path-or-t)
+          (re "(push ~S asdf:*central-registry*)"
+              (merge-pathnames  "quicklisp/" ql-origin)))
+        (unless (probe-file (ensure-directories-exist setup))
+          (re "(uiop:copy-file ~S ~S)"
+              (merge-pathnames "setup.lisp" ql-origin)
+              setup))
+        (cl:load setup)))))
 
 (defun dump (file &rest rest)
   (declare (ignorable rest))
