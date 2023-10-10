@@ -21,18 +21,34 @@ VERSION= $(shell grep :version lib/roswell2.asd |sed 's/^.*"\(.*\)".*$$/\1/')
 ARCHIVE=roswell-$(VERSION)-$(shell uname -m)-$(shell uname -s)
 # invoke linux
 # alpine for building environment.
-alpine:
-	docker run -w /tmp2 -v $$PWD:/tmp2/base --rm -it alpine:3.18 /bin/ash -c \
-	  "apk add --no-cache make sudo; \
-	   adduser -S u; \
-	   echo 'u ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers; \
-	   ln -s base/Makefile Makefile; \
+alpine-docker:
+	echo "FROM alpine:3.18\\n"\
+	     "run /bin/ash -c 'apk add --no-cache make sudo git;" \
+	     "adduser -S u;" \
+	     "echo \"u ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers;" \
+	     "mkdir /tmp2;cd /tmp2;" \
+	     "git clone https://github.com/roswell/roswell2 base;" \
+	     "ln -s base/Makefile Makefile;" \
+	     "ln -s base/bin bin;" \
+	     "ln -s base/lib lib;" \
+	     "make install-alpine alpine-sbcl;'" \
+	 | docker build -t roswell2 -
+alpine: alpine-docker
+	docker run -w /tmp3 -v $$PWD:/tmp3/base --rm -it roswell2 /bin/ash -c \
+	  "ln -s base/Makefile Makefile; \
 	   ln -s base/bin bin; \
 	   ln -s base/lib lib; \
-	   make install-alpine alpine-sbcl; \
-	   chown -R u:nogroup /tmp2; \
-	   chown -R u:nogroup /tmp/sbcl; \
+           ln -s /tmp2/alpine-sbcl alpine-sbcl; \
+	   chown -R u:nogroup /tmp3; \
 	   sudo -u u /bin/ash -i"
+linux-build: alpine-docker
+	docker run -w /tmp3 -v $$PWD:/tmp3/base --rm -it roswell2 /bin/ash -c \
+	  "ln -s base/Makefile Makefile; \
+	   ln -s base/bin bin; \
+	   ln -s base/lib lib; \
+           ln -s /tmp2/alpine-sbcl alpine-sbcl; \
+	   chown -R u:nogroup /tmp3; \
+	   sudo -u u make"
 # ubuntu for testing environment. try not to copy bin to the environment.
 ubuntu:
 	docker run -w /tmp2 -v $$PWD:/tmp2/base --rm -it ubuntu:16.04 /bin/bash -c \
