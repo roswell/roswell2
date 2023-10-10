@@ -53,7 +53,8 @@
         (uiop:run-program (list *stage1-path*
                                 "--eval" "(defpackage :quicklisp-quickstart)"
                                 "--eval" (format nil "(defvar quicklisp-quickstart::*quickstart-parameters* (list :initial-dist-url ~S))" dist-url)
-                                "--load" (uiop:native-namestring (merge-pathnames "setup.lisp" ql-path))
+                                "--eval" (format nil "(let ((*standard-output* *error-output*)(*trace-output* *error-output*))(load (uiop:native-namestring (merge-pathnames \"setup.lisp\" ~S))))"
+                                                 ql-path)
                                 "--eval" "(uiop:quit)")
                           :ignore-error-status t
                           :output :interactive

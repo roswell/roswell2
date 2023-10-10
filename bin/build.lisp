@@ -26,8 +26,8 @@
                                                 roswell-bin/util:*verbose*)
                                "--load" (uiop:native-namestring (merge-pathnames "quicklisp/setup.lisp" cache-path))
                                "--eval" (format nil "(mapc (lambda (x) (asdf:load-asd x)) (directory \"~A*.asd\"))" asds-path)
-                               "--eval" "(ql:quickload :roswell2)"
-                               "--eval" (format nil "(roswell2/main:setup ~S ~S ~S)" config-path core-path asds-path))))
+                               "--eval" "(let ((*standard-output* *error-output*)(*trace-output* *error-output*)) (ql:quickload :roswell2))"
+                               "--eval" (format nil "(let ((*standard-output* *error-output*)(*trace-output* *error-output*)) (roswell2/main:setup ~S ~S ~S))" config-path core-path asds-path))))
         (message :build "build stage2 with ~S" invoke-list)
         (uiop:run-program invoke-list
                           :output :interactive
