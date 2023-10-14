@@ -4,8 +4,7 @@
         :roswell-bin/util
         :roswell-bin/uname
         :roswell2/main
-        :roswell2.cmd.run
-        :roswell2.impl.install)
+        :roswell2.cmd.run)
   (:nicknames :roswell2.cmd.config)
   (:import-from :clingon))
 
@@ -54,7 +53,7 @@
 (defun handler (cmd)
   (multiple-value-bind (config path) 
       (config-file cmd)
-    (let ((orig-result (with-output-to-string (o) (cl-toml:encode config o))))
+    (let ((orig-result (config-to-string config)))
       (loop for arg in (clingon:command-arguments cmd)
             for split = (uiop:split-string arg :separator '(#\=))
             for left = (first split)
@@ -65,7 +64,7 @@
                           (if (equal right "")
                               nil
                               right))))
-      (let ((new-result (with-output-to-string (o) (cl-toml:encode config o))))
+      (let ((new-result (config-to-string config)))
         (unless (equal orig-result new-result)
           (with-open-file (o path :direction :output :if-exists :supersede)
             (format o "~A~%" new-result)))))

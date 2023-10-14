@@ -36,6 +36,7 @@
            :command
            :sub-command-filter
            :config
+           :config-to-string
            :save-config
            :load-config))
 
@@ -366,6 +367,10 @@
                        :if-exists :supersede)
       (cl-toml:encode config o))))
 
+(defun config-to-string (config)
+  (with-output-to-string (o)
+    (cl-toml:encode config o)))
+
 (defun rhash (keys hash &key (result :value)
                              (if-does-not-exist :error)
                              (depth 0)
@@ -429,6 +434,4 @@
   
   (list (config '("sbcl" "variant") config)
         (config '("sbcl" "version") config)
-        (with-output-to-string (o) (cl-toml:encode config o)))
-  
-  )
+        (config-to-string config)))
