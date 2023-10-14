@@ -8,3 +8,4 @@
 /sbcl.core
 /linkage-table-prelink-info-override.c
 /linkage-info.sexp
+lib/commit
