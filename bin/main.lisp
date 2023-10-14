@@ -6,7 +6,7 @@
         :roswell-bin/download
         :roswell-bin/archive
         :roswell-bin/build)
-  (:export :main))
+  (:export :main :setup))
 
 (in-package :roswell-bin/main)
 
@@ -57,6 +57,12 @@
     (exec invoke-list)
     ;; in case
     (uiop:quit 1)))
+
+(defun setup ()
+  (sb-posix:unsetenv "P")
+  (setf *stage1-commit* (uiop:read-file-line "lib/commit"))
+  (uname-s)
+  (uname-m))
 
 (defun main ()
   (setup-uid :euid t)

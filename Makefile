@@ -2,10 +2,10 @@ PREFIX?=/usr/local
 INSTALL_BIN=$(PREFIX)/bin
 LIBRARY_PATH=$(PREFIX)/lib
 TARGET=bin/lisp
-
+DOCKER_BUILD_OPTION?=
 all: $(TARGET)
 
-install:
+install: lib/commit
 	cp -f $(TARGET) $(INSTALL_BIN)
 	mkdir -p $(LIBRARY_PATH)/roswell
 	cp -r lib/* $(LIBRARY_PATH)/roswell
@@ -32,7 +32,7 @@ alpine-docker:
 	     "ln -s base/bin bin;" \
 	     "ln -s base/lib lib;" \
 	     "make install-alpine alpine-sbcl;'" \
-	 | docker build -t roswell2 -
+	 | docker build -t roswell2 $(DOCKER_BUILD_OPTION) -
 alpine: alpine-docker
 	docker run -w /tmp3 -v $$PWD:/tmp3/base --rm -it roswell2 /bin/ash -c \
 	  "ln -s base/Makefile Makefile; \
@@ -152,13 +152,11 @@ bin/ros.fasl: bin/ros.lisp
 	  --eval '(uiop:quit)'
 	rm -f $<
 
-$(TARGET): bin/ros.fasl
+$(TARGET): bin/ros.fasl lib/commit
 	./sbcl \
 	  --eval '(uiop/configuration::compute-user-cache)' \
 	  --load bin/ros.fasl \
-	  --eval "(sb-posix:unsetenv \"P\")" \
-	  --eval "(roswell-bin/uname:uname-s)" \
-	  --eval "(roswell-bin/uname:uname-m)" \
+	  --eval "(roswell-bin/main:setup)" \
 	  --eval "(setf uiop:*image-entry-point* (uiop:ensure-function \"roswell-bin/main:main\"))" \
 	  --eval '(uiop:dump-image "$@" :executable t)'
 
@@ -168,7 +166,7 @@ clean:
 	rm -f *.o
 	rm -f linkage-table-prelink-info-override.c
 
-archive: $(TARGET)
+archive: $(TARGET) lib/commit
 	mkdir $(ARCHIVE)
 	mkdir $(ARCHIVE)/bin
 	mkdir $(ARCHIVE)/lib
@@ -177,4 +175,7 @@ archive: $(TARGET)
 	sed -n "/####/q;p" Makefile > $(ARCHIVE)/Makefile
 	tar jcvf $(ARCHIVE).tbz $(ARCHIVE)
 
-.PHONY: alpine ubuntu clean install uninstall archive
+lib/commit:
+	echo $(shell cd lib;git show --format='%h %cd' --no-patch|| echo "unknown") > $@
+
+.PHONY: alpine ubuntu clean install uninstall archive lib/commit
