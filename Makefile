@@ -53,7 +53,7 @@ linux-build: alpine-docker
 ubuntu:
 	docker run -w /tmp2 -v $$PWD:/tmp2/base --rm -it ubuntu:16.04 /bin/bash -c \
 	  "apt-get update -y; \
-           apt-get install -y sudo make git; \
+           apt-get install -y sudo make git bzip2; \
 	   ln -s base/Makefile Makefile; \
 	   ln -s base/bin bin; \
 	   ln -s base/lib lib; \
@@ -90,6 +90,7 @@ linkage-info.sexp: quicklisp/local-projects/cl-curl/curl.fasl
 	sbcl --non-interactive \
 	  --eval "(require :asdf)" \
 	  --eval "(require :sb-posix)" \
+	  --eval "(require :sb-md5)" \
 	  --eval "(require :sb-bsd-sockets)" \
 	  --eval "(require :sb-introspect)" \
 	  --eval "(require :sb-cltl2)" \
@@ -113,6 +114,7 @@ sbcl.core: quicklisp/local-projects/cl-curl/curl.fasl
 	sbcl --non-interactive \
 	  --eval "(require :asdf)" \
 	  --eval "(require :sb-posix)" \
+	  --eval "(require :sb-md5)" \
 	  --eval "(require :sb-bsd-sockets)" \
 	  --eval "(require :sb-introspect)" \
 	  --eval "(require :sb-cltl2)" \
