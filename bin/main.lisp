@@ -61,8 +61,7 @@
 (defun setup ()
   (sb-posix:unsetenv "P")
   (setf *stage1-commit* (uiop:read-file-line "lib/commit"))
-  #-(and linux)
-  (cl-curl:init)
+  (lib-init)
   (uname-s)
   (uname-m))
 

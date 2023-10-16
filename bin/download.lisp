@@ -1,7 +1,7 @@
 (uiop:define-package :roswell-bin/download
   (:use :cl
         :roswell-bin/util)
-  (:export :download-simple))
+  (:export :download-simple :lib-info :lib-init))
 (in-package :roswell-bin/download)
 
 #-win32
@@ -39,3 +39,15 @@
           (unless (zerop res)
             (return-from download-simple 2))))))
   0)
+
+(defun lib-info ()
+  #-win32
+  (loop for elt in (uiop:split-string (cl-curl:curl-version) :separator '(#\Space))
+        for split = (uiop:split-string (string-trim "()" elt) :separator '(#\/))
+        collect (cons "libcurl" split)))
+
+(defun lib-init ()
+  #-win32
+  #-(and linux)
+  (cl-curl:init)
+  )
