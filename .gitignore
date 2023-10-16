@@ -1,10 +1,12 @@
 *.o
 *.fasl
 /sbcl
-/static-sbcl
+/alpine-sbcl
+/roswell-sbcl
+/normal-sbcl
 /quicklisp
-/bin/ros
-/bin/ros.exe
+/bin/lisp
+/bin/lisp.exe
 /sbcl.core
 /linkage-table-prelink-info-override.c
 /linkage-info.sexp
