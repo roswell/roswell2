@@ -3,6 +3,6 @@
   :class :package-inferred-system
   :version "23.8.15.114"
   :author "SANO Masatoshi"
-  :description "Install implementation"
+  :description "Install scripts"
   :license "MIT"
   :depends-on (:roswell2.cmd.install/main))
