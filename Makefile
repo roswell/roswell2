@@ -2,6 +2,7 @@ PREFIX?=/usr/local
 INSTALL_BIN=$(PREFIX)/bin
 LIBRARY_PATH=$(PREFIX)/lib
 TARGET=bin/lisp
+
 DOCKER_BUILD_OPTION?=
 all: $(TARGET)
 
@@ -19,6 +20,8 @@ uninstall:
 VERSION= $(shell grep :version lib/roswell2.asd |sed 's/^.*"\(.*\)".*$$/\1/')
 # " lem fail
 ARCHIVE=roswell-$(VERSION)-$(shell uname -m)-$(shell uname -s)
+SBCL?=$(shell which sbcl)
+
 # invoke linux
 # alpine for building environment.
 alpine-docker:
@@ -78,7 +81,7 @@ quicklisp/setup.lisp:
 	git clone --depth 1  https://github.com/roswell/cl-curl.git quicklisp/local-projects/cl-curl
 
 quicklisp/local-projects/cl-curl/curl.fasl: quicklisp/setup.lisp
-	sbcl \
+	$(SBCL) \
 	  --load quicklisp/setup.lisp \
 	  --eval "(ql:quickload :cl-curl)" \
 	  --eval "(asdf:operate 'asdf:monolithic-concatenate-source-op :cl-curl)" \
@@ -87,7 +90,7 @@ quicklisp/local-projects/cl-curl/curl.fasl: quicklisp/setup.lisp
 	  --quit
 
 linkage-info.sexp: quicklisp/local-projects/cl-curl/curl.fasl
-	sbcl --non-interactive \
+	$(SBCL) --non-interactive \
 	  --eval "(require :asdf)" \
 	  --eval "(require :sb-posix)" \
 	  --eval "(require :sb-md5)" \
@@ -102,7 +105,7 @@ linkage-info.sexp: quicklisp/local-projects/cl-curl/curl.fasl
 	  --quit
 
 linkage-table-prelink-info-override.c: linkage-info.sexp
-	sbcl --script /tmp/sbcl/tools-for-build/create-linkage-table-prelink-info-override.lisp $< $@
+	$(SBCL) --script /tmp/sbcl/tools-for-build/create-linkage-table-prelink-info-override.lisp $< $@
 
 %.o: %.c
 	while read l; do \
@@ -111,7 +114,7 @@ linkage-table-prelink-info-override.c: linkage-info.sexp
 	&& $$CC $$CFLAGS -Wno-builtin-declaration-mismatch -o $@ -c $<
 
 sbcl.core: quicklisp/local-projects/cl-curl/curl.fasl
-	sbcl --non-interactive \
+	$(SBCL) --non-interactive \
 	  --eval "(require :asdf)" \
 	  --eval "(require :sb-posix)" \
 	  --eval "(require :sb-md5)" \
@@ -129,13 +132,21 @@ alpine-sbcl: linkage-table-prelink-info-override.o sbcl.core
 	&& $$CC -no-pie -static $$LINKFLAGS -o $@ /tmp/sbcl/src/runtime/$$LIBSBCL $< $$LIBS \
 	  -static-libgcc -static-libstdc++ -lcurl -lnghttp2 -lssl -lcrypto -lz -lbrotlidec -lbrotlicommon -lidn2 -lunistring
 
-sbcl: sbcl.core
-	cp alpine-sbcl sbcl || \
-	sbcl \
+roswell-sbcl:
+	$(MAKE) SBCL='ros run -L sbcl-bin +Q' sbcl.core
+	ros run -L sbcl-bin --eval '(uiop:copy-file *runtime-pathname* "$@")' --quit
+	chmod 755 $@
+normal-sbcl: sbcl.core
+	$(SBCL) \
 	  --eval "(require :uiop)" \
 	  --eval '(uiop:copy-file *runtime-pathname* "$@")' \
 	  --quit
 	chmod 755 $@
+
+sbcl:
+	@cp alpine-sbcl sbcl 2>/dev/null || \
+	(rm -f sbcl.core && $(MAKE) roswell-sbcl && cp roswell-sbcl sbcl 2>/dev/null) || \
+	(rm -f sbcl.core && $(MAKE) normal-sbcl && cp normal-sbcl sbcl 2>/dev/null)
 
 bin/ros.lisp: sbcl
 	./sbcl \
