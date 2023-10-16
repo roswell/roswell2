@@ -19,5 +19,7 @@
 (defun handler (cmd)
   "Handler for just evaluate options"
   (let ((args (clingon:command-arguments cmd)))
-    (message :pin-handler "args-for impl handler ~S" args))
+    (message :impl-handler "args-for impl handler ~S" args)
+    (unless args
+      (clingon:run cmd '("--help"))))
   (uiop:quit))
