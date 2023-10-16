@@ -240,6 +240,9 @@
       (ignore-errors (load config-lisp))))
   (message :setup "dump stage2")
   (setf *verbose* 0)
+  (setf *stage2-commit*
+        (with-open-file (in (merge-pathnames "commit" (ql:where-is-system "roswell2")))
+          (read-line in)))
   (uiop:dump-image core-path :executable t))
 
 (defvar *sub-command-filter* (make-hash-table :test 'equal))
