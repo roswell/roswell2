@@ -14,11 +14,9 @@
     (asdf:find-system :roswell2.run.sbcl))))
 
 (defmethod run ((kind (eql :roswell2.sbcl))
-                param config cmd &key (exec 'exec))
+                param forms &key (exec 'exec))
   "run sbcl installed on cachedir"
-  (message :run "check params ~S"
-           (list :config config
-                 :args (impl-param-args param)))
+  (message :run "check params ~S" (impl-param-args param))
   (let* ((impl-path (impl-path param))
          (native (impl-param-native param))
          (args (impl-param-args param))
@@ -53,7 +51,7 @@
                               (:eval ,(format nil "(setf roswell.init:*cache-path* ~S)" (app-cachedir)))
                               ,@(when quicklisp
                                   `((:quicklisp ,quicklisp))))
-                            (or *forms*
+                            (or forms
                                 '((:repl)))))
             ret))
     (setf ret (nreverse ret))

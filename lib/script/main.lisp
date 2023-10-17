@@ -4,15 +4,17 @@
         :roswell-bin/util
         :roswell-bin/uname
         :roswell2/main
-        :roswell2.cmd.run
-        :roswell2.impl.install)
+        :roswell2.cmd.run)
   (:nicknames :roswell2.cmd.script)
   (:import-from :clingon)
-  (:import-from :sb-md5))
+  (:export :bin-dir))
 
 (in-package :roswell2.cmd.script/main)
 
 (defvar *command-class* 'roswell2/clingon.extensions::command-without-version)
+
+(defun bin-dir ()
+  (merge-pathnames ".roswell/bin/" (user-homedir)))
 
 (defun sub-commands ()
   (sub-command-filter "roswell2.script."))
@@ -39,6 +41,14 @@
       :long-name "image"
       :category "dummy options"
       :key :image)
+    ,(clingon:make-option
+      :string
+      :description "Take impl name it will be ignored for now."
+      :parameter "lisp"
+      :short-name #\L
+      :long-name "lisp"
+      :category "dummy options"
+      :key :lisp)
     ,(clingon:make-option
       :counter-filter
       :short-name #\v
@@ -75,7 +85,8 @@
   "Handler for just evaluate options"
   (let* ((config (load-config :where :user))
          (args (clingon:command-arguments cmd))
-         (impl (or (clingon:getopt cmd :lisp) "sbcl"))
+         (impl (or (and (find '("sbcl-bin" "sbcl") (clingon:getopt cmd :lisp) :test 'equal) "sbcl")
+                    "sbcl"))
          (version (or (clingon:getopt cmd :version)
                       (and impl (config `(,impl "version") config :if-does-not-exist nil))))
          (param (make-impl-param
@@ -85,23 +96,14 @@
                  :version version
                  :image nil
                  :quicklisp nil)))
-    (unless version
-      (impl-set-version-param param))
     (let ((script (uiop:file-exists-p (first args)))
           (impl-path (impl-path param))
+          (bin-dir (bin-dir))
           md5 package)
       (message :script-handler "args-for script handler ~S" args)
       (message :script-handler "cmd for script handler ~S" cmd)
       (message :script-handler "param for script handler ~S" param)
       (message :script-handler "fileexist: ~S" script)
-      (let* ((path (merge-pathnames "roswell.sexp" impl-path))
-             form image ql)
-        (unless (uiop:file-exists-p path)
-          (message :script-handler "~S seems not exist... try install: ~S" path param)
-          (install param)))
-      (unless script
-        (format *error-output* "invalid script file~%")
-        (uiop:quit 1))
       (unless args
         (clingon:run cmd '("--help")))
       (multiple-value-setq (package md5) (parse-script script))
@@ -112,14 +114,20 @@
                            :defaults (translate-pathname 
                                       script
                                       "/**/*.*" (merge-pathnames "core/**/*.*" impl-path)))
-            ql (merge-pathnames
-                (format nil "~A/" (pathname-name script))
-                (make-pathname
-                 :name nil
-                 :type nil
-                 :defaults (translate-pathname
-                            script
-                            "/**/*.*" (merge-pathnames "quicklisp/**/*.*" impl-path)))))
+            ql (if (and (equal (pathname-directory script)
+                               (pathname-directory bin-dir))
+                        (equal (pathname-device script)
+                               (pathname-device bin-dir)))
+                   t
+                   (namestring
+                    (merge-pathnames
+                     (format nil "~A/" (pathname-name script))
+                     (make-pathname
+                      :name nil
+                      :type nil
+                      :defaults (translate-pathname
+                                 script
+                                 "/**/*.*" (merge-pathnames "quicklisp/**/*.*" impl-path)))))))
       (message :script-handler "image-path: ~S" image)
       (message :script-handler "ql-path: ~S" ql)
       (message :script-handler "forms: ~S" *forms*)
@@ -131,10 +139,10 @@
                            :name (impl-param-name param)
                            :version (impl-param-version param)
                            :image nil
-                           :quicklisp (namestring ql))))
+                           :quicklisp ql)))
           (push (list :eval (format nil "(with-open-file (in ~S) (read-line in) (eval (read in)))" script)) *forms*)
           (push (list :dump image) *forms*)
-          (run (impl-param-run dump-param) dump-param config cmd :exec 'run-program)))
+          (run-impl :forms *forms* :param dump-param :exec 'run-program)))
       (let (*forms*
             (run-param (make-impl-param
                          (impl-param-kind param)
@@ -142,7 +150,7 @@
                          :name (impl-param-name param)
                          :version (impl-param-version param)
                          :image (namestring image)
-                         :quicklisp (namestring ql))))
+                         :quicklisp ql)))
         (push (list :eval (format nil "(progn #-roswell2.cmd.script (cl:load ~S))"
                                   (truename (merge-pathnames
                                              "ros-loader.lisp"
@@ -150,7 +158,6 @@
                                               (asdf:find-system :roswell2.cmd.script)))))) *forms*)
         (push (list :eval "(roswell2.cmd.script/ros-loader:ignore-shebang)") *forms*)
         (push (list :load script) *forms*)
-        (push (list :eval (format nil "(apply (let ((*package* (find-package ~S))) (read-from-string \"main\")) '~S)" package (cdr args))) *forms*)
-        (setf *forms* (nreverse *forms*))
-        (run (impl-param-run run-param) run-param config cmd))))
+        (push (list :eval (format nil "(apply (let ((*package* (find-package '~S))) (read-from-string \"main\")) '~S)" package (cdr args))) *forms*)
+        (run-impl :forms (nreverse *forms*) :param run-param))))
   (uiop:quit))

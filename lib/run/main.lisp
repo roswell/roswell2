@@ -3,11 +3,11 @@
         :roswell-bin/util
         :roswell-bin/uname
         :roswell2/main
-        :roswell2.impl.install
-        )
+        :roswell2.impl.install)
   (:nicknames :roswell2.cmd.run)
   (:import-from :clingon)
-  (:export :run 
+  (:export :run
+           :run-impl
            :distinguish
            :*forms* :impl-path))
 
@@ -195,7 +195,7 @@
                hash))
     result))
 
-(defgeneric run (kind param config cmd &key exec &allow-other-keys)
+(defgeneric run (kind param form &key exec &allow-other-keys)
   (:documentation "run"))
 
 (defgeneric distinguish (impl version)
@@ -205,6 +205,44 @@
   "default method for distinguish"
   nil)
 
+(defun run-impl (&key param
+                      impl
+                      version
+                      args
+                      (exec 'exec)
+                      forms
+                      specs)
+  (let* ((param (or param
+                    (make-impl-param
+                     (intern (string-upcase impl) :keyword)
+                     specs
+                     :name impl
+                     :version version
+                     :args args)))
+         (impl (impl-param-name param))
+         (version (impl-param-version param))
+         (args (impl-param-args param)))
+    (unless version
+      (impl-set-version-param param))
+    (message :run-impl "build param: ~S" param)
+    (let* ((sym (or
+                 (distinguish (and impl (intern impl :keyword))
+                              (and version (intern version :keyword)))
+                 (ignore-errors
+                   (let* ((path (merge-pathnames "roswell.sexp" (impl-path param)))
+                          form)
+                     (unless (uiop:file-exists-p path)
+                       (message :run-impl "~S seems not exist... try install: ~S" path param)
+                       (install param))
+                     (setf form (uiop:read-file-form path))
+                     (message :run-impl "read roswell.sexp: ~S" form)
+                     (getf form :run))))))
+      (message :run-impl "just before run impl-path:~S sym:~S param:~S"
+               (impl-path param) sym param)
+      (values (when sym
+                (run sym param forms :exec exec))
+              param))))
+
 (defun handler (cmd)
   "Handler for just evaluate options"
   (let ((args (clingon:command-arguments cmd)))
@@ -213,35 +251,17 @@
              args *forms*
              (clingon:command-name cmd))
     (let* ((config (load-config :where :user))
-           (impl  (clingon:getopt cmd :lisp))
-           (version (or (clingon:getopt cmd :version)
-                        (and impl
-                             (or (config `(,impl "version") *config* :if-does-not-exist nil)
-                                 (config `(,impl "version") config :if-does-not-exist nil)))))
-           (param (make-impl-param
-                   (intern (string-upcase impl) :keyword)
-                   cmd
-                   :version version
-                   :args args)))
+           (impl (or (clingon:getopt cmd :lisp)
+                     (config `("default" "lisp") *config* :if-does-not-exist nil)
+                     (config `("default" "lisp") config :if-does-not-exist nil))))
       (unless impl
         (clingon:run cmd '("--help")))
-      (unless version
-        (impl-set-version-param param))
-      (message :main-handler "build param: ~S" param)
-      (let ((sym (or
-                  (distinguish (and impl (intern impl :keyword))
-                               (and version (intern version :keyword)))
-                  (ignore-errors
-                    (let* ((path (merge-pathnames "roswell.sexp" (impl-path param)))
-                           form)
-                      (unless (uiop:file-exists-p path)
-                        (message :main-handler "~S seems not exist... try install: ~S" path param)
-                        (install param))
-                      (setf form (uiop:read-file-form path))
-                      (message :main-handler "read roswell.sexp: ~S" form)
-                      (getf form :run))))))
-        (message :main-handler "just before run impl-path:~S sym:~S param:~S"
-                 (impl-path param) sym param)
-        (if sym
-            (run sym param config cmd))))
+      (roswell2.cmd.run:run-impl :specs cmd
+                                 :impl impl
+                                 :version (or (clingon:getopt cmd :version)
+                                              (and impl
+                                                   (or (config `(,impl "version") *config* :if-does-not-exist nil)
+                                                       (config `(,impl "version") config :if-does-not-exist nil))))
+                                 :args (clingon:command-arguments cmd)
+                                 :forms *forms*))
     (uiop:quit)))
