@@ -141,43 +141,46 @@
 
 (defmethod impl-set-run-param ((param impl-param)))
 
-(defun make-impl-param (kind cmd &key
-                                 name
-                                 args
-                                 version
-                                 run
-                                 forms
-                                 (image nil image-p)
-                                 (quicklisp nil quicklisp-p))
+(defun make-impl-param (kind &key
+                             cmd
+                             name
+                             args
+                             version
+                             run
+                             forms
+                             (image nil image-p)
+                             (quicklisp nil quicklisp-p))
   (let* ((class (impl-param-class kind))
-         (impl (if (listp cmd)
-                   (apply 'make-instance class
-                          cmd)
-                   (make-instance
-                    class
-                    :kind kind
-                    :name (or name (clingon:getopt cmd :lisp))
-                    :variant (clingon:getopt cmd :variant)
-                    :os      (clingon:getopt cmd :os)
-                    :arch    (clingon:getopt cmd :arch)
-                    :version (or version (clingon:getopt cmd :version))
-                    :args args
-                    :uri     (clingon:getopt cmd :uri)
-                    :base-uri(clingon:getopt cmd :base-uri)
-                    :native  (clingon:getopt cmd :native)
-                    :quicklisp (if quicklisp-p
-                                   quicklisp
-                                   (or
-                                    (and (clingon:getopt cmd :quicklisp-path)
-                                         (or (uiop:directory-exists-p
-                                              (ensure-directories-exist
-                                               (pathname-directory (clingon:getopt cmd :quicklisp-path))))
-                                             (message :make-impl-param "~S is not taken as quicklisp directory"
-                                                      (clingon:getopt cmd :quicklisp-path))))
-                                    (clingon:getopt cmd :quicklisp)))
-                    :image (if image-p image (clingon:getopt cmd :image))
-                    :forms forms
-                    :run run))))
+         (listp (listp cmd))
+         (impl (flet ((elm (id)
+                        (if listp
+                            (getf cmd id)
+                            (clingon:getopt cmd id))))
+                 (make-instance
+                  class
+                  :kind kind
+                  :name (or name (elm :lisp))
+                  :variant (elm :variant)
+                  :os      (elm :os)
+                  :arch    (elm :arch)
+                  :version (or version (elm :version))
+                  :args args
+                  :uri     (elm :uri)
+                  :base-uri(elm :base-uri)
+                  :native  (elm :native)
+                  :quicklisp (if quicklisp-p
+                                 quicklisp
+                                 (or
+                                  (and (elm :quicklisp-path)
+                                       (or (uiop:directory-exists-p
+                                            (ensure-directories-exist
+                                             (pathname-directory (elm :quicklisp-path))))
+                                           (message :make-impl-param "~S is not taken as quicklisp directory"
+                                                    (elm :quicklisp-path))))
+                                  (elm :quicklisp)))
+                  :image (if image-p image (elm :image))
+                  :forms forms
+                  :run run))))
     (unless (impl-param-run impl)
       (impl-set-run-param impl))
     impl))

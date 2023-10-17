@@ -91,7 +91,7 @@
                       (and impl (config `(,impl "version") config :if-does-not-exist nil))))
          (param (make-impl-param
                  (intern (string-upcase impl) :keyword)
-                 cmd
+                 :cmd cmd
                  :name impl
                  :version version
                  :image nil
@@ -135,7 +135,7 @@
         (let (*forms*
               (dump-param (make-impl-param
                            (impl-param-kind param)
-                           cmd
+                           :cmd cmd
                            :name (impl-param-name param)
                            :version (impl-param-version param)
                            :image nil
@@ -146,7 +146,7 @@
       (let (*forms*
             (run-param (make-impl-param
                          (impl-param-kind param)
-                         cmd
+                         :cmd cmd
                          :name (impl-param-name param)
                          :version (impl-param-version param)
                          :image (namestring image)

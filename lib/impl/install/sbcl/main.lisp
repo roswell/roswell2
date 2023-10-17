@@ -214,7 +214,8 @@
 
 (defun handler (cmd)
   "Handler for just evaluate options"
-  (let ((param (make-impl-param :sbcl cmd
+  (let ((param (make-impl-param :sbcl
+                                :cmd cmd
                                 :name "sbcl")))
     (message :main-handler "args-for install ~A  ~S"
              (impl-param-name param)

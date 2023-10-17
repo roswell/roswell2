@@ -210,16 +210,8 @@
                       version
                       args
                       (exec 'exec)
-                      forms
-                      specs)
-  (let* ((param (or param
-                    (make-impl-param
-                     (intern (string-upcase impl) :keyword)
-                     specs
-                     :name impl
-                     :version version
-                     :args args)))
-         (impl (impl-param-name param))
+                      forms)
+  (let* ((impl (impl-param-name param))
          (version (impl-param-version param))
          (args (impl-param-args param)))
     (unless version
@@ -250,18 +242,27 @@
     (message :main-handler "args-for run handler ~S forms:~S name:~S"
              args *forms*
              (clingon:command-name cmd))
-    (let* ((config (load-config :where :user))
+    (let* ((args (clingon:command-arguments cmd))
+           (config (load-config :where :user))
            (impl (or (clingon:getopt cmd :lisp)
                      (config `("default" "lisp") *config* :if-does-not-exist nil)
-                     (config `("default" "lisp") config :if-does-not-exist nil))))
+                     (config `("default" "lisp") config :if-does-not-exist nil)))
+           (version (or (clingon:getopt cmd :version)
+                        (and impl
+                             (or (config `(,impl "version") *config*
+                                         :if-does-not-exist nil)
+                                 (config `(,impl "version") config
+                                         :if-does-not-exist nil))))))
       (unless impl
         (clingon:run cmd '("--help")))
-      (roswell2.cmd.run:run-impl :specs cmd
+      (roswell2.cmd.run:run-impl :forms *forms*
+                                 :param (make-impl-param
+                                         (intern (string-upcase impl) :keyword)
+                                         :cmd cmd
+                                         :name impl
+                                         :version version
+                                         :args args)
                                  :impl impl
-                                 :version (or (clingon:getopt cmd :version)
-                                              (and impl
-                                                   (or (config `(,impl "version") *config* :if-does-not-exist nil)
-                                                       (config `(,impl "version") config :if-does-not-exist nil))))
-                                 :args (clingon:command-arguments cmd)
-                                 :forms *forms*))
+                                 :version version
+                                 :args (clingon:command-arguments cmd)))
     (uiop:quit)))

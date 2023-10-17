@@ -27,7 +27,7 @@
          (forms (reverse roswell2.cmd.run:*forms*))
          (param (make-impl-param
                  (intern (string-upcase impl) :keyword)
-                 cmd
+                 :cmd cmd
                  :name impl
                  :version version
                  :args args
