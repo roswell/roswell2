@@ -4,17 +4,10 @@
         :roswell-bin/util
         :roswell-bin/uname
         :roswell-bin/download
-        :roswell-bin/archive
         :roswell-bin/build)
   (:export :main :setup))
 
 (in-package :roswell-bin/main)
-
-(defun intern-if-it-looks-keyword (x)
-  (if (eql #\: (ignore-errors (aref x 0)))
-      ;; it's only care run on default sbcl so don't consider readtable-case.
-      (intern (string-upcase x) :keyword)
-      x))
 
 (defun internal (args)
   "functionality which is difficult to implement without ffi or external commands. stage-2 can invoke it for implement installers."
@@ -25,9 +18,6 @@
       ((equal arg "rebuild")
        (build nil :force t)
        (uiop:quit 0))
-      ((equal arg "download")
-       (apply 'download-simple
-              (mapcar 'intern-if-it-looks-keyword args)))
       ((equal arg "head")
        (message :internal "not implementead head"))
       ((equal arg "uname")
@@ -36,8 +26,6 @@
        (which (first args)))
       ((equal arg "man")
        (message :internal "not implementead man"))
-      ((equal arg "tar")
-       (tar args))
       ((equal arg "impl")
        (message :internal "not implementead impl"))
       ((equal arg "version")

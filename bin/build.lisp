@@ -14,9 +14,7 @@
   (ensure-directories-exist config-path)
   (install-quicklisp :path cache-path :ql-path "quicklisp/")
   (message :build "build install quicklisp ~S done" config-path)
-  (let ((asds-path (truename 
-                    (merge-pathnames "../lib/roswell/"
-                                     (make-pathname :defaults *stage1-path* :name nil :type nil))))
+  (let ((asds-path (libdir))
         (core-path (core-path cache-path)))
     (if (or (not (uiop:file-exists-p (ensure-directories-exist core-path)))
             force)

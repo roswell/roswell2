@@ -3,6 +3,7 @@
   (:export :message
            :strip-run-cmd
            :which
+           :libdir
            :user-homedir
            :chdir
            :app-configdir
@@ -57,6 +58,11 @@
     (setf result (unless (zerop (length result))
                    result))
     result))
+
+(defun libdir ()
+  (truename
+   (merge-pathnames "../lib/roswell/"
+                    (make-pathname :defaults *stage1-path* :name nil :type nil))))
 
 (defun user-homedir ()
   "tweeked user-homedir-pathname"

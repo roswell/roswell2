@@ -1,5 +1,6 @@
 (uiop:define-package :roswell2.run.sbcl/main
   (:use :cl
+        :roswell-bin/config
         :roswell-bin/util
         :roswell-bin/uname
         :roswell2/main
@@ -49,6 +50,7 @@
       (push (format nil "(roswell.init:main '~S)"
                     (append `((:eval ,(format nil "(setf roswell.init:*impl-path* ~S)" impl-path))
                               (:eval ,(format nil "(setf roswell.init:*cache-path* ~S)" (app-cachedir)))
+                              (:eval ,(format nil "(setf roswell.init:*stage2-path* ~S)" *stage2-path*))
                               ,@(when quicklisp
                                   `((:quicklisp ,quicklisp))))
                             (or forms

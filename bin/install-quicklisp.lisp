@@ -34,8 +34,8 @@
                           (dist-url "http://beta.quicklisp.org/dist/quicklisp.txt")
                           (path (app-cachedir))
                           (ql-path "quicklisp/"))
-  (declare (ignorable dist-url))
-  (let ((ql-path (merge-pathnames ql-path (ensure-directories-exist path))))
+  (let ((ql-path (merge-pathnames ql-path (ensure-directories-exist path)))
+        (libpath (libdir)))
     (if (uiop:directory-exists-p ql-path)
         (message :install-quicklisp "~S found" ql-path)
       (multiple-value-bind (file-path version)
@@ -48,7 +48,6 @@
           (rename-file
            orig-dir
            ql-path))
-        ;;; (TBD) apply https patch for quicklisp here.
         (message :quicklisp-client-archive "set dist dir for '~A' = '~A'" ql-path dist-url)
         (uiop:run-program (list *stage1-path*
                                 "--eval" "(defpackage :quicklisp-quickstart)"
@@ -58,4 +57,19 @@
                                 "--eval" "(uiop:quit)")
                           :ignore-error-status t
                           :output :interactive
-                          :error-output :interactive)))))
+                          :error-output :interactive)))
+    ;; copy extension
+    (let* ((extension "roswell.quicklisp.extensions")
+           (loader (ensure-directories-exist (merge-pathnames "local-init/roswell2.lisp" ql-path)))
+           (lisp (format nil "~A.lisp" extension))
+           (asd (format nil "~A.asd" extension)))
+      (unless (uiop:file-exists-p loader)
+        (with-open-file (o loader :direction :output)
+          (format o "(asdf:load-system ~S)~%" extension)))
+      (loop for file in (list lisp asd)
+            for src = (merge-pathnames file libpath)
+            for dest = (merge-pathnames (format nil "quicklisp/~A" file) ql-path)
+            do (when (or (not (uiop:file-exists-p dest))
+                         (> (file-write-date src)
+                            (file-write-date dest)))
+                 (uiop:copy-file  src dest))))))

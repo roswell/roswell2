@@ -2,16 +2,39 @@
   (:use :cl)
   (:nicknames :roswell.init :ros)
   (:shadow :load :eval)
-  (:export :main :*load* :*impl-path* :*cache-path* :ensure-asdf))
+  (:export :main :*load* :*impl-path* :*cache-path* :*stage2-path* :roswell :ensure-asdf))
 (in-package :roswell2.run.sbcl/init)
 
 (defparameter *load* `((identity . cl:load)))
 (defvar *impl-path* nil)
 (defvar *cache-path* nil)
+(defvar *stage2-path* nil)
 (defvar *run-repl* nil)
 (defvar *dump-file* nil)
 (defvar *dump-option* nil)
 (defvar *repl-function* nil)
+
+(defun roswell (args &optional (output :string) trim)
+  (let* ((a0 *stage2-path*)
+         (proc (sb-ext:run-program a0 args
+                                   :output :stream
+                                   :error t))
+         (ret (if (equal output :string)
+                  (let ((input (sb-ext:process-output proc)))
+                    (with-output-to-string (o)
+                      (let ((a (make-array 512 :initial-element nil)))
+                        (loop for len = (read-sequence a input)
+                              do (write-sequence a o :end len)
+                              while (or (= len 512)
+                                        (and (eql (sb-ext:process-status proc) :running)
+                                             (sleep .1)))))))
+                  (loop while (and (eql (sb-ext:process-status proc) :running)
+                                   (sleep .1))
+                        finally (return-from roswell (sb-ext:process-exit-code proc)))
+                  )))
+    (if trim
+        (remove #\Newline (remove #\Return ret))
+        ret)))
 
 (defun ensure-asdf (&key (version))
   (declare (ignore version))
@@ -82,4 +105,4 @@
         (funcall *repl-function*)
         (sb-impl::toplevel-repl nil))))
 
-(push :roswell2.run.sbcl/init *features*)
+(push :roswell2.init *features*)
