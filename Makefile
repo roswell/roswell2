@@ -7,6 +7,7 @@ DOCKER_BUILD_OPTION?=
 all: $(TARGET)
 
 install: lib/commit
+	mkdir -p $(INSTALL_BIN)
 	cp -f $(TARGET) $(INSTALL_BIN)
 	mkdir -p $(LIBRARY_PATH)/roswell
 	cp -r lib/* $(LIBRARY_PATH)/roswell
