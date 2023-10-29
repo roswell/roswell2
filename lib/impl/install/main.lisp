@@ -60,7 +60,7 @@
     :key :uri)
    (clingon:make-option
     :string
-    :description (format nil "set local archive to install instad of downloading from The internet.")
+    :description (format nil "set local archive to install instead of downloading from The internet.")
     :parameter "archivefile"
     :long-name "archive"
     :key :archive)))
