@@ -2,7 +2,7 @@
   (:use :cl)
   (:nicknames :roswell.init :ros)
   (:shadow :load :eval)
-  (:export :main :*load* :*impl-path* :*cache-path* :*stage2-path* :roswell :ensure-asdf))
+  (:export :main :*load* :*impl-path* :*cache-path* :*stage2-path* :roswell :ensure-asdf :quit))
 (in-package :roswell2.run.sbcl/init)
 
 (defparameter *load* `((identity . cl:load)))
