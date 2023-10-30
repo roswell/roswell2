@@ -47,7 +47,6 @@
         collect (cons "libcurl" split)))
 
 (defun lib-init ()
-  #-win32
   #-(and linux)
   (cl-curl:init)
   )
