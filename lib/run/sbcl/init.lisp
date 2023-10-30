@@ -1,8 +1,9 @@
 (defpackage :roswell2.run.sbcl/init
   (:use :cl)
-  (:nicknames :roswell.init :ros)
+  (:nicknames :roswell.init :ros :roswell :roswell.util)
   (:shadow :load :eval)
-  (:export :main :*load* :*impl-path* :*cache-path* :*stage2-path* :roswell :ensure-asdf :quit))
+  (:export :main :*load* :*impl-path* :*cache-path* :*stage2-path* :roswell :ensure-asdf :quit
+           :which :exec))
 (in-package :roswell2.run.sbcl/init)
 
 (defparameter *load* `((identity . cl:load)))
@@ -36,6 +37,64 @@
         (remove #\Newline (remove #\Return ret))
         ret)))
 
+(defun re (&rest r)
+  (cl:eval (read-from-string (apply 'format nil r))))
+
+#+unix
+(progn ;from swank
+  (sb-alien:define-alien-routine ("execvp" %execvp) sb-alien:int
+    (program sb-alien:c-string)
+    (argv (* sb-alien:c-string)))
+  (defun execvp (program args)
+    "Replace current executable with another one."
+    (let ((a-args (sb-alien:make-alien sb-alien:c-string
+                                       (+ 1 (length args)))))
+      (unwind-protect
+           (progn
+             (loop for index from 0 by 1
+                   and item in (append args '(nil))
+                   do (setf (sb-alien:deref a-args index)
+                            item))
+             (when (minusp
+                    (%execvp program a-args))
+               (let ((errno (sb-impl::get-errno)))
+                 (case errno
+                   (2 (error "No such file or directory: ~S" program))
+                   (otherwise
+                    (error "execvp(3) failed. (Code=~D)" errno))))))
+        (sb-alien:free-alien a-args)))))
+
+(defun run-program (args)
+  (funcall 'ensure-asdf)
+  (re "(uiop:run-program ~S :output :interactive :error-output :interactive)"
+      args))
+
+(defun exec (args)
+  "Launch executable"
+  #+unix
+  (execvp (first args) args)
+  (re "(uiop:quit(run-program ~S)" args))
+
+(defvar *strip-run-cmd-hash* (make-hash-table :test 'equal))
+(defun strip-run-cmd (cmd &key cache)
+  (funcall 'ensure-asdf)
+  (unless cache
+    (remhash cmd *strip-run-cmd-hash*))
+  (if (eql (gethash cmd *strip-run-cmd-hash* t) t)
+      (setf (gethash cmd *strip-run-cmd-hash*)
+            (re "(uiop:run-program ~S :output '(:string :stripped t) :ignore-error-status t)"
+                cmd))
+      (gethash cmd *strip-run-cmd-hash*)))
+
+(defun which (cmd)
+  "find out command's full path."
+  (let* ((which-cmd #-win32(format nil "command -v ~S" cmd)
+                    #+win32(format nil "cmd /c where ~S" cmd))
+         (result (strip-run-cmd which-cmd)))
+    (setf result (unless (zerop (length result))
+                   result))
+    result))
+
 (defun ensure-asdf (&key (version))
   (declare (ignore version))
   (require :asdf))
@@ -48,20 +107,19 @@
   (declare (ignorable rest))
   (ensure-asdf)
   (unless (find :quicklisp *features*)
-    (flet ((re (&rest r) (cl:eval (read-from-string (apply 'format nil r)))))
-      (let* ((ql-origin (merge-pathnames  "quicklisp/" *cache-path*))
-             (setup (merge-pathnames "setup.lisp"
-                                     (if (eql t path-or-t)
-                                         ql-origin
-                                         path-or-t))))
-        (unless (eql t path-or-t)
-          (re "(push ~S asdf:*central-registry*)"
-              (merge-pathnames  "quicklisp/" ql-origin)))
-        (unless (probe-file (ensure-directories-exist setup))
-          (re "(uiop:copy-file ~S ~S)"
-              (merge-pathnames "setup.lisp" ql-origin)
-              setup))
-        (cl:load setup)))))
+    (let* ((ql-origin (merge-pathnames  "quicklisp/" *cache-path*))
+           (setup (merge-pathnames "setup.lisp"
+                                   (if (eql t path-or-t)
+                                       ql-origin
+                                       path-or-t))))
+      (unless (eql t path-or-t)
+        (re "(push ~S asdf:*central-registry*)"
+            (merge-pathnames  "quicklisp/" ql-origin)))
+      (unless (probe-file (ensure-directories-exist setup))
+        (re "(uiop:copy-file ~S ~S)"
+            (merge-pathnames "setup.lisp" ql-origin)
+            setup))
+      (cl:load setup))))
 
 (defun dump (file &rest rest)
   (declare (ignorable rest))

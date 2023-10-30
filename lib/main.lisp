@@ -304,10 +304,13 @@
     :key :verbose)))
 
 (defun handler (cmd)
-  "Handler for just evaluate options"
   (message :main-handler "args for root handler ~S" (clingon:command-arguments cmd))
   (unless (clingon:command-arguments cmd)
     (clingon:run cmd '("--help")))
+  (let ((args (clingon:command-arguments cmd)))
+    (if (ignore-errors
+          (uiop:file-exists-p (first args)))
+        (clingon:run cmd`("script" "run" ,@args))))
   (uiop:quit))
 
 (defun command (system &key
@@ -338,13 +341,8 @@
 (defun main ()
   (setf *stage2-path* (first (uiop/image:raw-command-line-arguments)))
   (let* ((command (command "roswell2" :name (pathname-name *stage1-path*)))
-         (args (cdr (uiop/image:raw-command-line-arguments)))
-         (pos (position "--" args :test 'equal)))
-    (clingon:run command
-                 (if (ignore-errors
-                       (uiop:file-exists-p (nth (1+ pos) args)))
-                     (cons "script" args)
-                     args))))
+         (args (cdr (uiop/image:raw-command-line-arguments))))
+    (clingon:run command args)))
 
 (defun toml-path (where)
   (let ((user-directory (app-cachedir))

@@ -26,7 +26,7 @@
 (defun fetch-via-roswell (url file &key (follow-redirects t) quietly (maximum-redirects 10))
   "Request URL and write the body of the response to FILE."
   (declare (ignorable follow-redirects maximum-redirects quietly))
-  (let ((ret (roswell (list "-v" "internal" "download"
+  (let ((ret (funcall 'roswell (list "-v" "internal" "download"
                             (ql-http::urlstring (ql-http:url url))
                             (namestring file)) nil)))
     (values (make-instance 'ql-http::header :status (if (zerop ret) 200 400))
