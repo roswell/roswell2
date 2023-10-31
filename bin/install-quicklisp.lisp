@@ -65,7 +65,7 @@
            (asd (format nil "~A.asd" extension)))
       (unless (uiop:file-exists-p loader)
         (with-open-file (o loader :direction :output)
-          (format o "(asdf:load-system ~S)~%" extension)))
+          (format o "#+roswell2.init(asdf:load-system ~S)~%" extension)))
       (loop for file in (list lisp asd)
             for src = (merge-pathnames file libpath)
             for dest = (merge-pathnames (format nil "quicklisp/~A" file) ql-path)
