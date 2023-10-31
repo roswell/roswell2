@@ -13,8 +13,12 @@
 
 (defvar *command-class* 'roswell2/clingon.extensions::command-without-version)
 
-(defun bin-dir ()
-  (merge-pathnames ".roswell/bin/" (user-homedir)))
+(defun bin-dir (&key native)
+  (or
+   (unless native
+     (or (config `("path" "bin") (load-config :where :local) :if-does-not-exist nil)
+         (config `("path" "bin") (load-config :where :user)  :if-does-not-exist nil)))
+   (merge-pathnames ".roswell/bin/" (user-homedir))))
 
 (defun sub-commands ()
   (sub-command-filter "roswell2.script."))

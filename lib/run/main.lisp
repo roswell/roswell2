@@ -17,6 +17,12 @@
 (defvar *command-class* 'roswell2/clingon.extensions::run-command)
 (defvar *category-implementation-option* "Implementation designation options")
 
+(defun filter-helper (param)
+  (lambda (x option)
+    (declare (ignore option))
+    (push (list param x) *forms*)
+    nil))
+
 (defun options ()
   "Returns the options for run command"
   (list
@@ -76,10 +82,7 @@
     :parameter "FORM"
     :short-name #\e
     :long-name "eval"
-    :filter (lambda (x option)
-              (declare (ignore option))
-              (push (list :eval x) *forms*)
-              nil)
+    :filter (filter-helper :eval)
     :category "Runtime options"
     :key :eval)
    (clingon:make-option
@@ -88,10 +91,7 @@
     :parameter "FILE"
     :short-name #\l
     :long-name "load"
-    :filter (lambda (x option)
-              (declare (ignore option))
-              (push (list :load x) *forms*)
-              nil)
+    :filter (filter-helper :load)
     :category "Runtime options"
     :key :load)
    (clingon:make-option
@@ -99,20 +99,14 @@
     :description "quit lisp here"
     :short-name #\q
     :long-name "quit"
-    :filter (lambda (x option)
-              (declare (ignore x option))
-              (push (list :quit) *forms*)
-              nil)
+    :filter (filter-helper :quit)
     :category "Runtime options"
     :key :quit)
    (clingon:make-option
     :option-filter
     :description "run repl after option processing"
     :long-name "repl"
-    :filter (lambda (x option)
-              (declare (ignore x option))
-              (push (list :repl) *forms*)
-              nil)
+    :filter (filter-helper :repl)
     :category "Runtime options"
     :key :repl)
    (clingon:make-option
@@ -120,10 +114,7 @@
     :description "dump image after option processing"
     :parameter "FILE"
     :long-name "dump"
-    :filter (lambda (x option)
-              (declare (ignore option))
-              (push (list :dump x) *forms*)
-              nil)
+    :filter (filter-helper :dump)
     :category "Runtime options"
     :key :dump)
    (clingon:make-option

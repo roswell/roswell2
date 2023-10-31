@@ -100,7 +100,7 @@
                  :quicklisp nil)))
     (let ((script (uiop:file-exists-p (first args)))
           (impl-path (impl-path param))
-          (bin-dir (bin-dir))
+          (bin-dir (bin-dir :native t))
           md5 package)
       (message :script-handler "args-for script handler ~S" args)
       (message :script-handler "cmd for script handler ~S" cmd)
