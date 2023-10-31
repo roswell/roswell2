@@ -15,6 +15,10 @@
 (defvar *dump-option* nil)
 (defvar *repl-function* nil)
 
+(defun ensure-asdf (&key (version))
+  (declare (ignore version))
+  (require :asdf))
+
 (defun roswell (args &optional (output :string) trim)
   (let* ((a0 *stage2-path*)
          (proc (sb-ext:run-program a0 args
@@ -31,8 +35,7 @@
                                              (sleep .1)))))))
                   (loop while (and (eql (sb-ext:process-status proc) :running)
                                    (sleep .1))
-                        finally (return-from roswell (sb-ext:process-exit-code proc)))
-                  )))
+                        finally (return-from roswell (sb-ext:process-exit-code proc))))))
     (if trim
         (remove #\Newline (remove #\Return ret))
         ret)))
@@ -64,10 +67,11 @@
                     (error "execvp(3) failed. (Code=~D)" errno))))))
         (sb-alien:free-alien a-args)))))
 
-(defun run-program (args)
-  (funcall 'ensure-asdf)
-  (re "(uiop:run-program ~S :output :interactive :error-output :interactive)"
-      args))
+(defun run-program (args &key output)
+  (ensure-asdf)
+  (re "(uiop:run-program ~S :output ~S :error-output :interactive)"
+      args
+      (or output :interactive)))
 
 (defun exec (args)
   "Launch executable"
@@ -77,7 +81,7 @@
 
 (defvar *strip-run-cmd-hash* (make-hash-table :test 'equal))
 (defun strip-run-cmd (cmd &key cache)
-  (funcall 'ensure-asdf)
+  (ensure-asdf)
   (unless cache
     (remhash cmd *strip-run-cmd-hash*))
   (if (eql (gethash cmd *strip-run-cmd-hash* t) t)
@@ -94,10 +98,6 @@
     (setf result (unless (zerop (length result))
                    result))
     result))
-
-(defun ensure-asdf (&key (version))
-  (declare (ignore version))
-  (require :asdf))
 
 (defun asdf (&rest rest)
   (declare (ignorable rest))
