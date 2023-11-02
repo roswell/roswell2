@@ -17,7 +17,7 @@
                                       (path (app-cachedir)))
   "=> \"2021-02-13\""
   (let ((file-path (ensure-directories-exist (merge-pathnames "tmp/quicklisp-client.version" path))))
-    (download-simple uri file-path)
+    (simple-fetch uri file-path)
     (uiop:read-file-line file-path)))
 
 (defun quicklisp-client-archive (&key version
@@ -26,7 +26,7 @@
          (archive-uri (format nil *quicklisp-client-archive-uri* version))
          (file-path (ensure-directories-exist (merge-pathnames (format nil "archives/qlcli-~A.tgz" version) cache-path))))
     (unless (uiop:file-exists-p file-path)
-      (download-simple archive-uri file-path))
+      (simple-fetch archive-uri file-path))
     (values file-path version)))
 
 (defun install-quicklisp (&key

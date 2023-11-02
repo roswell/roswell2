@@ -42,7 +42,7 @@
     (message :impl-set-version-param "No ~A version specified. Downloading ~A to see the available versions..."
              (impl-param-name param)
              (file-namestring tsv-uri))
-    (let ((code (download-simple tsv-uri tsv-path)))
+    (let ((code (simple-fetch tsv-uri tsv-path)))
       (unless (zerop code)
         (message :impl-set-version-param "Download failed (Code=~A)" code)
         (return-from impl-set-version-param 1)))
@@ -101,7 +101,7 @@
       (message :impl-download "PATH: ~A" archive)
       (if (uiop:file-exists-p archive)
           (message :impl-download "PATH: ~A already exist. skip downloading." archive)
-          (let ((code (download-simple uri archive)))
+          (let ((code (simple-fetch uri archive)))
             (unless (zerop code)
               (message :impl-download "Download failed (Code=~A)" code)
               (return-from impl-download 1))))

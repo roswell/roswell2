@@ -18,7 +18,7 @@
 
 (defun download-cmd (cmd)
   (let ((args (clingon:command-arguments cmd)))
-    (apply 'download-simple
+    (apply 'simple-fetch
            (mapcar 'intern-if-it-looks-keyword args))))
 
 (defun tar-cmd (cmd)

@@ -1,7 +1,8 @@
 (uiop:define-package :roswell-bin/download
   (:use :cl
         :roswell-bin/util)
-  (:export :download-simple :lib-info :lib-init))
+  (:export :simple-fetch
+           :lib-info :lib-init))
 (in-package :roswell-bin/download)
 
 #-win32
@@ -16,8 +17,8 @@
   (declare (ignorable stream buffer))
   (* size nmemb))
 
-(defun download-simple (uri path &key &allow-other-keys)
-  (message :download-simple "download uri ~A path ~A" uri path)
+(defun simple-fetch (uri path &key &allow-other-keys)
+  (message :simple-fetch "download uri ~A path ~A" uri path)
   #-win32
   (let* ((part (format nil "~A.part" path))
          (bodyfile (cl-curl/functions::fopen part "wb"))
@@ -37,7 +38,7 @@
             (cl-curl/functions::fclose bodyfile)
             (uiop:rename-file-overwriting-target part path))
           (unless (zerop res)
-            (return-from download-simple 2))))))
+            (return-from simple-fetch 2))))))
   0)
 
 (defun lib-info ()
