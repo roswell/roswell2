@@ -43,6 +43,13 @@
     :key :arch)
    (clingon:make-option
     :string
+    :description "wrap implementation."
+    :parameter "WRAP"
+    :long-name "wrap"
+    :category *category-implementation-option*
+    :key :wrap)
+   (clingon:make-option
+    :string
     :description "set variant"
     :parameter "VARIANT"
     :long-name "variant"
