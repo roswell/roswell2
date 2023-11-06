@@ -52,7 +52,7 @@ alpine: alpine-docker
 	   chown -R u:u .; \
 	   sudo -u u /bin/ash -i"
 linux-build: alpine-docker
-	docker run -w /tmp3 -v $$PWD:/tmp3/base --rm -it roswell2 /bin/ash -c \
+	docker run -w /tmp3 -v $$PWD:/tmp3/base --rm -i roswell2 /bin/ash -c \
 	  "ln -s base/Makefile Makefile; \
 	   ln -s base/bin bin; \
 	   ln -s base/lib lib; \

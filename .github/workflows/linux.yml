@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v3
-      - name: Install Roswell
+      - name: build
         run: |
           make linux-build archive
       - name: upload artifacts
