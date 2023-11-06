@@ -14,8 +14,8 @@ jobs:
       - name: Install Roswell
         run: |
           make linux-build archive
-        - name: upload artifacts
-          uses: actions/upload-artifact@v3
-          with:
-              name: roswell-linux
-              path: *.tbz
+      - name: upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: roswell-linux
+          path: *.tbz
