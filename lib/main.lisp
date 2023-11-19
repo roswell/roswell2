@@ -31,6 +31,8 @@
            :impl-param-image
            :impl-param-quicklisp
            :impl-param-run
+           :impl-param-forms
+           :impl-param-wrap
            :setup
            :main
            :command
@@ -104,7 +106,11 @@
    (forms
     :initarg :forms
     :initform nil
-    :accessor impl-param-forms)))
+    :accessor impl-param-forms)
+   (wrap
+    :initarg :wrap
+    :initform nil
+    :accessor impl-param-wrap)))
 
 (defmethod impl-path ((param impl-param))
   ;; "~/.cache/roswell/impl/sbcl/2.3.7/x86-64/linux/bin/"
@@ -168,6 +174,7 @@
                   :uri     (elm :uri)
                   :base-uri(elm :base-uri)
                   :native  (elm :native)
+                  :wrap    (elm :wrap)
                   :quicklisp (if quicklisp-p
                                  quicklisp
                                  (or

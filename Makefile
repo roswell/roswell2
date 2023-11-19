@@ -18,16 +18,18 @@ uninstall:
 
 ####
 #dev.
-VERSION= $(shell grep :version lib/roswell2.asd |sed 's/^.*"\(.*\)".*$$/\1/')
+VERSION?=$(shell grep :version lib/roswell2.asd |sed 's/^.*"\(.*\)".*$$/\1/')
 # " lem fail
 ARCHIVE=roswell-$(VERSION)-$(shell uname -m)-$(shell uname -s)
 SBCL?=$(shell which sbcl)
+USER_ID?=$(shell id -u)
+GROUP_ID?=$(shell id -g)
 
 # invoke linux
 # alpine for building environment.
 alpine-docker:
 	echo "FROM alpine:3.18\\n"\
-	     "run /bin/ash -c 'apk add --no-cache make sudo git;" \
+	     "run /bin/ash -c 'apk add --no-cache make sudo git shadow;" \
 	     "adduser -S u;" \
 	     "echo \"u ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers;" \
 	     "mkdir /tmp2;cd /tmp2;" \
@@ -42,16 +44,24 @@ alpine: alpine-docker
 	  "ln -s base/Makefile Makefile; \
 	   ln -s base/bin bin; \
 	   ln -s base/lib lib; \
-           ln -s /tmp2/alpine-sbcl alpine-sbcl; \
-	   chown -R u:nogroup /tmp3; \
+	   ln -s /tmp2/alpine-sbcl alpine-sbcl; \
+	   ln -s /tmp2/sbcl.core sbcl.core; \
+	   usermod -u $(USER_ID) u; \
+	   addgroup -g $(GROUP_ID) u; \
+	   usermod -g $(GROUP_ID) u; \
+	   chown -R u:u .; \
 	   sudo -u u /bin/ash -i"
 linux-build: alpine-docker
-	docker run -w /tmp3 -v $$PWD:/tmp3/base --rm -it roswell2 /bin/ash -c \
+	docker run -w /tmp3 -v $$PWD:/tmp3/base --rm -i roswell2 /bin/ash -c \
 	  "ln -s base/Makefile Makefile; \
 	   ln -s base/bin bin; \
 	   ln -s base/lib lib; \
-           ln -s /tmp2/alpine-sbcl alpine-sbcl; \
-	   chown -R u:nogroup /tmp3; \
+	   ln -s /tmp2/alpine-sbcl alpine-sbcl; \
+	   ln -s /tmp2/sbcl.core sbcl.core; \
+	   usermod -u $(USER_ID) u; \
+	   addgroup -g $(GROUP_ID) u; \
+	   usermod -g $(GROUP_ID) u; \
+	   chown -R u:u .; \
 	   sudo -u u make"
 # ubuntu for testing environment. try not to copy bin to the environment.
 ubuntu:
@@ -137,6 +147,10 @@ roswell-sbcl:
 	$(MAKE) SBCL='ros run -L sbcl-bin +Q' sbcl.core
 	ros run -L sbcl-bin --eval '(uiop:copy-file *runtime-pathname* "$@")' --quit
 	chmod 755 $@
+roswell2-sbcl:
+	$(MAKE) SBCL='lisp run -L sbcl --native --' sbcl.core
+	lisp run -Q -L sbcl --eval '(uiop:copy-file *runtime-pathname* "$@")' --quit
+	chmod 755 $@
 normal-sbcl: sbcl.core
 	$(SBCL) \
 	  --eval "(require :uiop)" \
@@ -147,6 +161,7 @@ normal-sbcl: sbcl.core
 sbcl:
 	@cp alpine-sbcl sbcl 2>/dev/null || \
 	(rm -f sbcl.core && $(MAKE) roswell-sbcl && cp roswell-sbcl sbcl 2>/dev/null) || \
+	(rm -f sbcl.core && $(MAKE) roswell2-sbcl && cp roswell2-sbcl sbcl 2>/dev/null) || \
 	(rm -f sbcl.core && $(MAKE) normal-sbcl && cp normal-sbcl sbcl 2>/dev/null)
 
 bin/ros.lisp: sbcl
@@ -175,12 +190,12 @@ $(TARGET): bin/ros.fasl lib/commit
 	  --eval '(uiop:dump-image "$@" :executable t)'
 
 clean:
-	rm -f sbcl.core linkage-info.sexp
+	rm -f linkage-info.sexp
 	rm -rf quicklisp
 	rm -f *.o
 	rm -f linkage-table-prelink-info-override.c
 
-archive: $(TARGET) lib/commit
+archive: lib/commit
 	mkdir $(ARCHIVE)
 	mkdir $(ARCHIVE)/bin
 	mkdir $(ARCHIVE)/lib

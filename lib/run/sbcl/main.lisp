@@ -19,6 +19,7 @@
   "run sbcl installed on cachedir"
   (message :run "check params ~S" (impl-param-args param))
   (let* ((impl-path (impl-path param))
+         (wrap (impl-param-wrap param))
          (native (impl-param-native param))
          (args (impl-param-args param))
          (sbcl-home (merge-pathnames "lib/sbcl/" impl-path))
@@ -29,10 +30,11 @@
          help
          (image (impl-param-image param))
          (quicklisp (impl-param-quicklisp param)))
+    (when wrap
+      (push wrap ret))
     (push (uiop:native-namestring (merge-pathnames (format nil "bin/sbcl~A" (exeext)) impl-path)) ret)
     (loop while runtime-options
           do (push (pop runtime-options) ret))
-
     (unless native
       (push "--core" ret)
       (push (if image
