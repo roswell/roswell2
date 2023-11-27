@@ -352,7 +352,7 @@
     (clingon:run command args)))
 
 (defun toml-path (where)
-  (let ((user-directory (app-cachedir))
+  (let ((user-directory (app-configdir))
         (local-directory (uiop:getcwd)))
     (case where
       (:local (merge-pathnames ".roswell-config.toml" local-directory))
@@ -430,6 +430,7 @@
                       keys
                       config
                       &key
+                      if-does-not-exist
                       debug)
   (let ((hash (rhash keys config :result :hash :if-does-not-exist :create :debug debug)))
     (if val
