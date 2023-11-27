@@ -16,6 +16,8 @@
          (name (first args))
          (name (namestring (make-pathname :defaults name :type nil)))
          params)
+    (unless (clingon:command-arguments cmd)
+      (clingon:run cmd '("--help")))
     (map () (lambda (i)
               (setf name (remove i name)))
          "./\\")
