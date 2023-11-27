@@ -3,7 +3,6 @@ INSTALL_BIN=$(PREFIX)/bin
 LIBRARY_PATH=$(PREFIX)/lib
 TARGET=bin/lisp
 
-DOCKER_BUILD_OPTION?=
 all: $(TARGET)
 
 install: lib/commit
@@ -24,6 +23,9 @@ ARCHIVE=roswell-$(VERSION)-$(shell uname -m)-$(shell uname -s)
 SBCL?=$(shell which sbcl)
 USER_ID?=$(shell id -u)
 GROUP_ID?=$(shell id -g)
+DOCKER_IMAGE?=roswell2
+DOCKER_BUILD_OPTION?=
+DOCKER_RUN_OPTION?=
 
 # invoke linux
 # alpine for building environment.
@@ -38,9 +40,9 @@ alpine-docker:
 	     "ln -s base/bin bin;" \
 	     "ln -s base/lib lib;" \
 	     "make install-alpine alpine-sbcl;'" \
-	 | docker build -t roswell2 $(DOCKER_BUILD_OPTION) -
+	 | docker build -t $(DOCKER_IMAGE) $(DOCKER_BUILD_OPTION) -
 alpine: alpine-docker
-	docker run -w /tmp3 -v $$PWD:/tmp3/base --rm -it roswell2 /bin/ash -c \
+	docker run -w /tmp3 -v $$PWD:/tmp3/base --rm -it $(DOCKER_IMAGE) $(DOCKER_RUN_OPTION) /bin/ash -c \
 	  "ln -s base/Makefile Makefile; \
 	   ln -s base/bin bin; \
 	   ln -s base/lib lib; \
@@ -52,7 +54,7 @@ alpine: alpine-docker
 	   chown -R u:u .; \
 	   sudo -u u /bin/ash -i"
 linux-build: alpine-docker
-	docker run -w /tmp3 -v $$PWD:/tmp3/base --rm -i roswell2 /bin/ash -c \
+	docker run -w /tmp3 -v $$PWD:/tmp3/base --rm -i $(DOCKER_IMAGE) $(DOCKER_RUN_OPTION) /bin/ash -c \
 	  "ln -s base/Makefile Makefile; \
 	   ln -s base/bin bin; \
 	   ln -s base/lib lib; \
@@ -65,7 +67,7 @@ linux-build: alpine-docker
 	   sudo -u u make"
 # ubuntu for testing environment. try not to copy bin to the environment.
 ubuntu:
-	docker run -w /tmp2 -v $$PWD:/tmp2/base --rm -it ubuntu:16.04 /bin/bash -c \
+	docker run -w /tmp2 -v $$PWD:/tmp2/base --rm -it ubuntu:16.04 $(DOCKER_RUN_OPTION) /bin/bash -c \
 	  "apt-get update -y; \
            apt-get install -y sudo make git bzip2; \
 	   ln -s base/Makefile Makefile; \
