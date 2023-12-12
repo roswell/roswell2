@@ -63,6 +63,8 @@
            (loader (ensure-directories-exist (merge-pathnames "local-init/roswell2.lisp" ql-path)))
            (lisp (format nil "~A.lisp" extension))
            (asd (format nil "~A.asd" extension)))
+      ;; shouldn't automatically load.
+      #+()
       (unless (uiop:file-exists-p loader)
         (with-open-file (o loader :direction :output)
           (format o "#+roswell2.init(asdf:load-system ~S)~%" extension)))
