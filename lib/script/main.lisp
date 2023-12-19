@@ -28,4 +28,5 @@
 
 (defun handler (cmd)
   "Handler for just evaluate options"
-  )
+  (unless (clingon:command-arguments cmd)
+    (clingon:run cmd '("--help"))))
