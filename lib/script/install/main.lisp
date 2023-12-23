@@ -88,19 +88,28 @@
 (process-exec "exec ros -Q -L sbcl-bin -- $0 \"$@\"")
 |#
 
-(defun copy-ros (from to &key systems)
+(defun register-script (to system)
+  (message :register-script "register script file ~S system ~S" to system)
+  (let ((file (file-namestring to))
+        (config (load-config :where :user)))
+    (let ((list (coerce (config `(,system  "scripts") config :if-does-not-exist nil) 'list)))
+      (pushnew file list :test 'equal)
+      (setf (config `(,system  "scripts") config :if-does-not-exist :create) list))
+    (save-config :config config :where :user)))
+
+(defun copy-ros (from to)
   (with-open-file (in from)
     (with-open-file (out to :direction :output :if-exists :supersede)
       (format out "~A~%" (read-line in)) ;; shebang
       (format out "~A~%" (read-line in)) ;; mode
-      (format out "~A~%" (read-line in)) ;; #|
+      (format out "~A ~%" (read-line in)) ;; #|
       (format out "~A~%" (process-exec (read-line in))) ;; exec line
       ;; rest of file.
       (loop for line = (read-line in nil nil)
             while line
             do (format out "~A~%" line)))))
 
-(defun install-file (from &key systems)
+(defun install-file (from &key system)
   (let ((to (ensure-directories-exist
              (make-pathname
               :defaults (bin-dir)
@@ -110,16 +119,18 @@
         (ros-p (equalp (pathname-type from) "ros")))
     (message :install-file "install file ~A ros-p:~A" to ros-p)
     (if ros-p
-        (copy-ros from to :systems systems)
+        (copy-ros from to)
         (uiop/stream:copy-file from to))
+    (when system
+      (register-script to system))
     (sb-posix:chmod to #o755)
     #+win32
     (when ros-p
-      (copy-ros from (make-pathname :defaults to :type "ros") :systems systems))))
+      (copy-ros from (make-pathname :defaults to :type "ros")))))
 
-(defun install-scripts-from-dir (dir)
+(defun install-scripts-from-dir (dir &key system)
   (loop for file in (directory (merge-pathnames "roswell/*.*" dir))
-        do (install-file file)))
+        do (install-file file :system system)))
 
 (defun handler (cmd)
   (message :script-install "script install ~S" (clingon:command-arguments cmd))
@@ -133,8 +144,10 @@
                    ((setf system (ql-dist:find-system arg))
                     (ql-dist:ensure-installed system)
                     (let ((release (ql-dist:release system)))
-                      (install-scripts-from-dir (ql-dist:base-directory release))))
+                      (install-scripts-from-dir (ql-dist:base-directory release)
+                                                :system (ql-dist:name system))))
                    ((setf system (asdf:find-system arg nil))
                     (let* ((asd (asdf:system-source-file system))
                            (dir (make-pathname :defaults asd :name nil :type nil)))
-                      (install-scripts-from-dir dir)))))))
+                      (install-scripts-from-dir dir
+                                                :system (asdf:component-name system))))))))
