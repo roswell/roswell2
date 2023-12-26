@@ -41,6 +41,10 @@ alpine-docker:
 	     "ln -s base/lib lib;" \
 	     "make install-alpine alpine-sbcl;'" \
 	 | docker build -t $(DOCKER_IMAGE) $(DOCKER_BUILD_OPTION) -
+
+alpine-docker-scratch:
+	$(MAKE) DOCKER_BUILD_OPTION=--no-cache alpine-docker
+
 alpine: alpine-docker
 	docker run -w /tmp3 -v $$PWD:/tmp3/base --rm -it $(DOCKER_IMAGE) $(DOCKER_RUN_OPTION) /bin/ash -c \
 	  "ln -s base/Makefile Makefile; \
