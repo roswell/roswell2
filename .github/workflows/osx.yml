@@ -1,0 +1,23 @@
+name: linux
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v3
+      - name: build
+        run: |
+          brew install sbcl
+          make sbcl
+          make all archive
+      - name: upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: roswell-linux
+          path: ./*.tbz
