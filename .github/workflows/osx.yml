@@ -13,7 +13,10 @@ jobs:
       - uses: actions/checkout@v3
       - name: build
         run: |
-          brew install sbcl
+          tar xf sbcl-2.4.0-x86-64-darwin-binary.tar.bz2
+          cd sbcl-2.4.0-x86-64-darwin
+          sh install.sh
+          cd ..
           make sbcl
           make all archive
       - name: upload artifacts
