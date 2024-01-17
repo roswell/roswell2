@@ -24,7 +24,14 @@
 
 (defun uname-m ()
   (let ((m (strip-run-cmd "uname -m" :cache t)))
-    (cond ((equal m "i86pc")
+    (cond ((equal m "x86_64")
+           (or
+            #+darwin
+            (when (equal (strip-run-cmd "sysctl -in sysctl.proc_translated" :cache t)
+                         "1")
+              "arm64") ;;rosetta
+            "x86-64"))
+          ((equal m "i86pc")
            ;; solaris
            (if (equal (strip-run-cmd "isainfo -k" :cache t)
                       "amd64")
@@ -54,7 +61,7 @@
 
 (defun core-path (base-path)
   (merge-pathnames (format nil "core/~A/~A/roswell~A"
-                           (uname-m)                           
+                           (uname-m)
                            (uname-s)
                            (exeext)) base-path))
 

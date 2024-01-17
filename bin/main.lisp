@@ -52,6 +52,7 @@
   (sb-posix:unsetenv "P")
   (setf *stage1-commit* (uiop:read-file-line "lib/commit"))
   (lib-init)
+  (strip-run-cmd nil) ;; clear all cache
   (uname-s)
   (uname-m))
 

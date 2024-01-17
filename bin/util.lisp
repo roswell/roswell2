@@ -39,15 +39,18 @@
 (defvar *strip-run-cmd-hash* (make-hash-table :test 'equal))
 
 (defun strip-run-cmd (cmd &key cache)
-  (unless cache
-    (remhash cmd *strip-run-cmd-hash*))
-  (if (eql (gethash cmd *strip-run-cmd-hash* t) t)
-      (setf (gethash cmd *strip-run-cmd-hash*)
-            (uiop:run-program
-             cmd
-             :output '(:string :stripped t)
-             :ignore-error-status t))
-      (gethash cmd *strip-run-cmd-hash*)))
+  (cond (cmd
+         (unless cache
+           (remhash cmd *strip-run-cmd-hash*))
+         (if (eql (gethash cmd *strip-run-cmd-hash* t) t)
+             (setf (gethash cmd *strip-run-cmd-hash*)
+                   (uiop:run-program
+                    cmd
+                    :output '(:string :stripped t)
+                    :ignore-error-status t))
+             (gethash cmd *strip-run-cmd-hash*)))
+        (t
+         (setf *strip-run-cmd-hash* (make-hash-table :test 'equal)))))
 
 (defun which (cmd)
   "find out command's full path."
