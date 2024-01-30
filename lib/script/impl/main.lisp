@@ -12,7 +12,15 @@
 
 (defun sub-commands ())
 
-(defun options ())
+(defun options ()
+  (list
+   (clingon:make-option
+    :string
+    :description "designate script name"
+    :parameter "ALIAS"
+    :short-name #\A
+    :long-name "alias"
+    :key :alias)))
 
 (defun handler (cmd)
   (let* ((args (clingon:command-arguments cmd))
@@ -20,13 +28,13 @@
          (to (ensure-directories-exist
               (make-pathname
                :defaults (bin-dir)
-               :name impl
+               :name (or (clingon:getopt cmd :alias) impl)
                :type nil))))
     (message :script-impl "script impl ~S" args)
+    (unless (clingon:command-arguments cmd)
+      (clingon:run cmd '("--help")))
     (with-open-file (o to :direction :output :if-exists :supersede)
       (format o "~{~A~%~}"
               `("#!/bin/sh"
-                "#|-*- mode:lisp -*-|#"
-                "#|"
-                ,(format nil "exec lisp run -L ~A --native -- \"$@\"" impl)
-                "|#")))))
+                ,(format nil "exec lisp run -L ~A --native -- \"$@\"" impl))))
+    (sb-posix:chmod to #o755)))
