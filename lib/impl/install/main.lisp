@@ -76,7 +76,7 @@
   (let ((args (clingon:command-arguments cmd)))
     (message :main-handler "args-for install handler ~S" args)
     (cond ((null args)
-           )
+           (clingon:run cmd '("--help")))
           (t
           )))
   (uiop:quit))
