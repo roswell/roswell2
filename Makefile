@@ -213,4 +213,11 @@ archive: lib/commit
 lib/commit:
 	echo $(shell cd lib;git show --format='%h %cd' --no-patch|| echo "unknown") > $@
 
+install-for-test:
+	make clean
+	make
+	make uninstall
+	make install
+	rm -rf ~/.cache/roswell/core/
+
 .PHONY: alpine ubuntu clean install uninstall archive lib/commit
