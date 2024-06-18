@@ -18,21 +18,21 @@
 (in-package :roswell-bin/util)
 
 (defvar *message* 'message-func)
-(defvar *message-first-inovocation* nil)
+(defvar *message-first-invocation* nil)
 (defvar *verbose* 0)
 
 (defun message-func (level fmt &rest params)
   (declare (ignorable level))
   (unless (zerop *verbose*)
     (format *error-output* "~&[~8,4f]"
-            (float (/ (- (get-internal-run-time) *message-first-inovocation*)
+            (float (/ (- (get-internal-run-time) *message-first-invocation*)
                       internal-time-units-per-second)))
     (apply #'format *error-output* fmt params)
     (terpri *error-output*)))
 
 (defun message (&rest r)
-  (unless *message-first-inovocation*
-    (setf *message-first-inovocation* (get-internal-run-time)))
+  (unless *message-first-invocation*
+    (setf *message-first-invocation* (get-internal-run-time)))
   (apply *message* r)
   nil)
 

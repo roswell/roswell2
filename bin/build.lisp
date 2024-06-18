@@ -19,8 +19,8 @@
     (if (or (not (uiop:file-exists-p (ensure-directories-exist core-path)))
             force)
       (let ((invoke-list (list *stage1-path*
-                               "--eval" (format nil "(setf roswell-bin/util::*message-first-inovocation* ~A roswell-bin/util:*verbose* ~A)"
-                                                roswell-bin/util::*message-first-inovocation*
+                               "--eval" (format nil "(setf roswell-bin/util::*message-first-invocation* ~A roswell-bin/util:*verbose* ~A)"
+                                                roswell-bin/util::*message-first-invocation*
                                                 roswell-bin/util:*verbose*)
                                "--load" (uiop:native-namestring (merge-pathnames "quicklisp/setup.lisp" cache-path))
                                "--eval" (format nil "(mapc (lambda (x) (asdf:load-asd x)) (directory \"~A*.asd\"))" asds-path)

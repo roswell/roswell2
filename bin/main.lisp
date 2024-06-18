@@ -37,8 +37,8 @@
   (let* ((core (build nil))
          (invoke-list `(,(format nil "~A" core)
                         "--eval"
-                        ,(format nil "(setf roswell-bin/util::*message-first-inovocation* ~A)"
-                                 roswell-bin/util::*message-first-inovocation*)
+                        ,(format nil "(setf roswell-bin/util::*message-first-invocation* ~A)"
+                                 roswell-bin/util::*message-first-invocation*)
                         ,@(unless (zerop roswell-bin/util:*verbose*)
                             (list (format nil "-~v@{v~}" roswell-bin/util:*verbose* nil)))
                         ,@args)))
