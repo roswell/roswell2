@@ -260,14 +260,19 @@
 (defun sub-command-filter (prefix)
   (cdr 
    (or (gethash prefix *sub-command-filter*)
-       (let ((sub-commands
-               (loop for system-name in (remove-if-not
-                                         (string-start-with-filter prefix)
-                                         (asdf:registered-systems))
-                     for command = (command system-name)
-                     do (message :sub-commands "sub command candidate for ~S  ~S ~A" prefix system-name command)
-                     when command
-                     collect command)))
+       (let ((sub-commands))
+         (loop with system-names = (remove-if-not
+                                    (string-start-with-filter prefix)
+                                    (asdf:registered-systems))
+               for system-name in system-names
+               for command = (command system-name)
+               do (message :sub-commands "sub command candidate for ~S  ~S ~A" prefix system-name command)
+               when (and command
+                         (not (find (clingon.command:command-name command)
+                                    sub-commands
+                                    :test 'equal
+                                    :key 'clingon.command:command-name)))
+               do (push command sub-commands))
          (setf (gethash prefix *sub-command-filter*) (cons t sub-commands))))))
 
 (defun sub-commands ()
