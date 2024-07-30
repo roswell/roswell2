@@ -149,10 +149,8 @@
     (unless (find-gnumake)
       (message :impl-install "'make' command not available.")
       (return-from impl-install 1))
-    (uiop:run-program  
-     (format nil "~A install.sh" (sh))
-     :output :interactive
-     :error-output :interactive)
+    (run-program
+     (format nil "~A install.sh" (sh)))
     (message :impl-install "install Done.")))
 
 #+linux
