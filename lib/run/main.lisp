@@ -253,14 +253,14 @@
                                          :if-does-not-exist nil))))))
       (unless impl
         (clingon:run cmd '("--help")))
-      (roswell2.cmd.run:run-impl :forms *forms*
-                                 :param (make-impl-param
-                                         (intern (string-upcase impl) :keyword)
-                                         :cmd cmd
-                                         :name impl
-                                         :version version
-                                         :args args)
-                                 :impl impl
-                                 :version version
-                                 :args (clingon:command-arguments cmd)))
+      (run-impl :forms *forms*
+                :param (make-impl-param
+                        (intern (string-upcase impl) :keyword)
+                        :cmd cmd
+                        :name impl
+                        :version version
+                        :args args)
+                :impl impl
+                :version version
+                :args (clingon:command-arguments cmd)))
     (uiop:quit)))
