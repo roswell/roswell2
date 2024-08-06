@@ -7,7 +7,8 @@
   (:export :sh
            :option-base
            :install
-           :impl-set-version-param))
+           :impl-set-version-param
+           :impl-set-config))
    
 (in-package :roswell2.impl.install/main)
 
@@ -63,9 +64,9 @@
     :description (format nil "set local archive to install instead of downloading from The internet.")
     :parameter "archivefile"
     :long-name "archive"
-    :key :archive)))
+    :key :archive)
+   ))
 
-(defmethod install ((param impl-param)))
 (defmethod impl-set-version-param ((param impl-param)))
 
 (defun sub-commands ()
@@ -77,10 +78,29 @@
     (message :main-handler "args-for install handler ~S" args)
     (cond ((null args)
            (clingon:run cmd '("--help")))
-          (t
-          )))
+          (t)))
   (uiop:quit))
 
 (defun sh ()
   (or (which "bash")
       "sh"))
+
+(defun impl-set-config (param &key (where :user))
+  (let* ((variant (impl-param-variant* param))
+         (version (impl-param-version param))
+         (config (when where (load-config :where where)))
+         (name (impl-param-name param)))
+    (when where
+      (unless (config `(,name "variant") config :if-does-not-exist nil)
+        (setf (config `(,name "variant") config) variant))
+      (unless (config `(,name "version") config :if-does-not-exist nil)
+        (setf (config `(,name "version") config) version))
+      (save-config :config config :where where))
+    (with-open-file (o (merge-pathnames "roswell.sexp" (impl-path param))
+                       :direction :output
+                       :if-exists :supersede)
+      (format o "~S~%" param))))
+
+(defmethod install :after ((param impl-param))
+  (message :install-after "install after ~S" param)
+  (impl-set-config param))

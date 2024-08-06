@@ -167,20 +167,6 @@
                                       interpreter
                                       (namestring i)))))))
 
-(defun impl-set-config (param)
-  (let* ((variant (impl-param-variant* param))
-         (version (impl-param-version param))
-         (config (load-config :where :user))
-         (name (impl-param-name param)))
-    (unless (config `(,name "variant") config :if-does-not-exist nil) (setf (config `(,name "variant") config) variant))
-    (unless (config `(,name "version") config :if-does-not-exist nil) (setf (config `(,name "version") config) version))
-    (save-config :config config :where :user)
-    (with-open-file (o (merge-pathnames "roswell.sexp" (impl-path param))
-                       :direction :output
-                       :if-exists :supersede)
-      (format o "~S~%" param))))
-
-
 (defmethod install ((param sbcl-impl-param))
   (unless (impl-param-version param)
     (when (eql (impl-set-version-param param) 1)
@@ -199,7 +185,6 @@
     (return-from install 1))
   #+linux
   (impl-patchelf param)
-  (impl-set-config param)
   0)
 
 (defmethod impl-param-class ((kind (eql :sbcl)))
