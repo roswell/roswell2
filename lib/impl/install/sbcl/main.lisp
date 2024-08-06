@@ -191,9 +191,11 @@
   (declare (ignorable kind))
   'sbcl-impl-param)
 
-(defmethod impl-set-run-param ((param sbcl-impl-param))
+(defmethod impl-set-param ((param sbcl-impl-param) cmd)
+  (declare (ignore cmd))
   ;; tbd
-  (setf (impl-param-run param) :roswell2.sbcl))
+  (unless (impl-param-run impl)
+    (setf (impl-param-run param) :roswell2.sbcl)))
 
 (defun handler (cmd)
   "Handler for just evaluate options"

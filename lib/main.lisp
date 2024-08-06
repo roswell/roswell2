@@ -145,7 +145,7 @@
   (declare (ignorable kind))
   'impl-param)
 
-(defmethod impl-set-run-param ((param impl-param)))
+(defmethod impl-set-param ((param impl-param) cmd))
 
 (defun make-impl-param (kind &key
                              cmd
@@ -188,8 +188,7 @@
                   :image (if image-p image (elm :image))
                   :forms forms
                   :run run))))
-    (unless (impl-param-run impl)
-      (impl-set-run-param impl))
+    (impl-set-param impl cmd)
     impl))
 
 (defmethod print-object ((param impl-param) stream)
