@@ -174,24 +174,7 @@
 
 (defun sub-commands ()
   (setf *config* (load-config :where :local))
-  (let (result
-        (hash (config '("pinned") *config*)))
-    (message :run-sub-commands "run sub-commands: ~S"
-             hash)
-    (when hash
-      (maphash (lambda (name y)
-                 (push (make-instance
-                        'roswell2/clingon.extensions::command-without-version
-                        :name name
-                        :description (format nil "launch ~A" name)
-                        :options (loop for i in (options)
-                                       unless (member (clingon.options:option-key i)
-                                                      '(:lisp :arch :variant :os :version))
-                                       collect i)
-                        :handler 'sub-handler)
-                       result))
-               hash))
-    result))
+  nil)
 
 (defgeneric run (kind param form &key exec &allow-other-keys)
   (:documentation "run"))
