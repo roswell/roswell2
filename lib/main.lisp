@@ -369,7 +369,7 @@
   (let ((path (toml-path where)))
     (values (if (uiop:file-exists-p path)
                 (or (ignore-errors (cl-toml:parse-file path))
-                    (message :impl-set-config "broken ~A" path))
+                    (message :load-config "broken ~A" path))
                 default)
             path)))
 
