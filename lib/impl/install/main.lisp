@@ -8,7 +8,8 @@
            :option-base
            :install
            :impl-set-version-param
-           :impl-set-config))
+           :impl-save-config
+           :install-impl-param))
    
 (in-package :roswell2.impl.install/main)
 
@@ -17,6 +18,12 @@
 (defun options ()
   "Returns the options for the  command"
   (list))
+
+(defclass install-impl-param (impl-param)
+  ((config-location
+    :initarg :config-location
+    :initform nil
+    :reader impl-param-config-location)))
 
 (defun option-base (&key variant-explanation
                          base-uri-explanation
@@ -65,6 +72,11 @@
     :parameter "archivefile"
     :long-name "archive"
     :key :archive)
+   (clingon:make-option
+    :string
+    :description "edit config to use the implementation as default (user/local/none)"
+    :long-name "config-location"
+    :key :config-location)
    ))
 
 (defmethod impl-set-version-param ((param impl-param)))
@@ -85,8 +97,10 @@
   (or (which "bash")
       "sh"))
 
-(defun impl-set-config (param &key (where :user))
-  (let* ((variant (impl-param-variant* param))
+(defun impl-save-config (param)
+  (message :impl-save-config "impl-save-config param:~S" param)
+  (let* ((where (slot-value param 'config-location))
+         (variant (impl-param-variant* param))
          (version (impl-param-version param))
          (config (when where (load-config :where where)))
          (name (impl-param-name param)))
@@ -96,11 +110,21 @@
       (unless (config `(,name "version") config :if-does-not-exist nil)
         (setf (config `(,name "version") config) version))
       (save-config :config config :where where))
+    (setf (slot-value param 'config-location) nil)
     (with-open-file (o (merge-pathnames "roswell.sexp" (impl-path param))
                        :direction :output
                        :if-exists :supersede)
       (format o "~S~%" param))))
 
-(defmethod install :after ((param impl-param))
+(defmethod install :after ((param install-impl-param))
   (message :install-after "install after ~S" param)
-  (impl-set-config param))
+  (impl-save-config param))
+
+(defmethod impl-set-param :after ((param install-impl-param) cmd)
+  (message :impl-set-param "set config-location ~S" (clingon:getopt cmd :config-location))
+  (setf (slot-value param 'config-location)
+        (let ((place (clingon:getopt cmd :config-location)))
+          (cond ((null place) :user)
+                ((equalp place "user") :user)
+                ((equalp place "local") :local)
+                (t nil)))))

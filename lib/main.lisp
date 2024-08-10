@@ -33,6 +33,7 @@
            :impl-param-run
            :impl-param-forms
            :impl-param-wrap
+           :impl-set-param
            :setup
            :main
            :command

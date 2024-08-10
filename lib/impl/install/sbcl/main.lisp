@@ -29,7 +29,7 @@
    :arch-explanation (format nil "set arch for install. defualt:~A" (uname-m))
    :os-explanation (format nil "set os for install. default:~A" (uname-s))))
 
-(defclass sbcl-impl-param (impl-param)
+(defclass sbcl-impl-param (install-impl-param)
   ())
 
 (defun impl-tsv-uri (param)
@@ -193,8 +193,8 @@
 
 (defmethod impl-set-param ((param sbcl-impl-param) cmd)
   (declare (ignore cmd))
-  ;; tbd
-  (unless (impl-param-run impl)
+  (message :impl-set-param "set impl-param-run" :roswell2.sbcl)
+  (unless (impl-param-run param)
     (setf (impl-param-run param) :roswell2.sbcl)))
 
 (defun handler (cmd)
