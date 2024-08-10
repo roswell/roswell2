@@ -204,6 +204,7 @@
                  (ignore-errors
                    (let* ((path (merge-pathnames "roswell.sexp" (impl-path param)))
                           form)
+                     (message :run-impl "read ~S" path)
                      (unless (uiop:file-exists-p path)
                        (message :run-impl "~S seems not exist... try install: ~S" path param)
                        (install param))

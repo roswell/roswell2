@@ -1,7 +1,9 @@
 (uiop:define-package :roswell2.cmd.install/main
   (:use :cl
         :roswell-bin/util
-        :roswell2/main)
+        :roswell2/main
+        :roswell2.cmd.run
+        )
   (:nicknames :roswell2.cmd.install)
   (:import-from :clingon))
    
@@ -20,6 +22,7 @@
   "Handler for just evaluate options"
   (let ((args (clingon:command-arguments cmd)))
     (message :main-handler "args-for install handler ~S" args)
+    (message :install-handler "forms: ~S" *forms*)
     (cond ((null args)
            )
           (t
