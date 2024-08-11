@@ -179,10 +179,12 @@
                   :quicklisp (if quicklisp-p
                                  quicklisp
                                  (or
-                                  (and (elm :quicklisp-path)
+                                  (and (progn
+                                         (message :make-impl-param "parse quicklisp-path ~S"
+                                                  (elm :quicklisp-path))
+                                         (elm :quicklisp-path))
                                        (or (uiop:directory-exists-p
-                                            (ensure-directories-exist
-                                             (pathname-directory (elm :quicklisp-path))))
+                                            (elm :quicklisp-path))
                                            (message :make-impl-param "~S is not taken as quicklisp directory"
                                                     (elm :quicklisp-path))))
                                   (elm :quicklisp)))
