@@ -203,7 +203,7 @@ clean:
 	rm -f linkage-table-prelink-info-override.c
 	rm -f $(TARGET)
 
-archive: lib/commit $(TARGET)
+archive: lib/commit
 	mkdir $(ARCHIVE)
 	mkdir $(ARCHIVE)/bin
 	mkdir $(ARCHIVE)/lib
