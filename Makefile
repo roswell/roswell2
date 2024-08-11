@@ -69,7 +69,7 @@ linux-build: alpine-docker
 	   addgroup -g $(GROUP_ID) u; \
 	   usermod -g $(GROUP_ID) u; \
 	   chown -R u:u .; \
-	   make"
+	   sudo -u u make"
 # ubuntu for testing environment. try not to copy bin to the environment.
 ubuntu:
 	docker run -w /tmp2 -v $$PWD:/tmp2/base --rm --platform $(DOCKER_PLATFORM)  -it ubuntu:16.04 $(DOCKER_RUN_OPTION) /bin/bash -c \
