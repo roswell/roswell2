@@ -5,12 +5,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: macos-latest
+  build-intel:
+    runs-on: macOS-12
     strategy:
       fail-fast: false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: build
         run: |
           curl -L -O https://github.com/roswell/sbcl_bin/releases/download/2.4.0/sbcl-2.4.0-x86-64-darwin-binary.tar.bz2
@@ -21,7 +21,7 @@ jobs:
           make sbcl
           make all archive
       - name: upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: roswell-osx
           path: ./*.tbz
