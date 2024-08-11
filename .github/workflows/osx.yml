@@ -18,7 +18,7 @@ jobs:
         run: |
           brew install automake autoconf
           curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
-          make roswell-sbcl sbcl
+          make roswell-sbcl; mv roswell-sbcl sbcl
           make all archive
       - name: upload artifacts
         uses: actions/upload-artifact@v4
