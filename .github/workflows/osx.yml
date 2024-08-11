@@ -5,20 +5,20 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-intel:
-    runs-on: macOS-12
+  build:
+    runs-on: ${{ matrix.target == 'arm64' && 'macos-14' || 'macOS-12' }}
     strategy:
       fail-fast: false
+      matrix:
+        lisp: [sbcl-bin/2.4.0]
+        target: [arm64, x86-64]
     steps:
       - uses: actions/checkout@v4
       - name: build
         run: |
-          curl -L -O https://github.com/roswell/sbcl_bin/releases/download/2.4.0/sbcl-2.4.0-x86-64-darwin-binary.tar.bz2
-          tar xf sbcl-2.4.0-x86-64-darwin-binary.tar.bz2
-          cd sbcl-2.4.0-x86-64-darwin
-          sh install.sh
-          cd ..
-          make sbcl
+          brew install automake autoconf
+          curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
+          make roswell-sbcl sbcl
           make all archive
       - name: upload artifacts
         uses: actions/upload-artifact@v4
