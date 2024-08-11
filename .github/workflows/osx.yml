@@ -15,6 +15,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: build
+        env:
+          LISP: ${{ matrix.lisp }}
+          CFLAGS: -mmacosx-version-min=10.9
+          CXXFLAGS: -mmacosx-version-min=10.9
+          LDFLAGS: -mmacosx-version-min=10.9
         run: |
           brew install automake autoconf
           curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
@@ -23,5 +28,19 @@ jobs:
       - name: upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: roswell-osx
+          name: ${{ matrix.target == 'arm64' && 'roswell-osx-arm64' || 'roswell-osx' }}
+          path: ./*.tbz
+  build-arm64-linux:
+    runs-on: macos-14
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: build
+        run: |
+          make linux-build archive
+      - name: upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: roswell-linux-arm64
           path: ./*.tbz
