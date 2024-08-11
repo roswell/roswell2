@@ -9,13 +9,21 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      matrix:
+        target: [arm64, x86-64]
     steps:
       - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          image: tonistiigi/binfmt:qemu-v8.1.5
       - name: build
+        env:
+          DOCKER_PLATFORM: ${{ matrix.target == 'arm64' && 'linux/arm64' || 'linux/amd64' }}
         run: |
           make linux-build archive
       - name: upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: roswell-linux
+          name: ${{ matrix.target == 'arm64' && 'roswell-linux-arm64' || 'roswell-linux' }}
           path: ./*.tbz

@@ -26,6 +26,7 @@ GROUP_ID?=$(shell id -g)
 DOCKER_IMAGE?=roswell2
 DOCKER_BUILD_OPTION?=
 DOCKER_RUN_OPTION?=
+DOCKER_PLATFORM ?= linux/amd64
 
 # invoke linux
 # alpine for building environment.
@@ -40,13 +41,13 @@ alpine-docker:
 	     "ln -s base/bin bin;" \
 	     "ln -s base/lib lib;" \
 	     "make install-alpine alpine-sbcl;'" \
-	 | docker build -t $(DOCKER_IMAGE) $(DOCKER_BUILD_OPTION) -
+	 | docker build --platform $(DOCKER_PLATFORM) -t $(DOCKER_IMAGE) $(DOCKER_BUILD_OPTION) -
 
 alpine-docker-scratch:
 	$(MAKE) DOCKER_BUILD_OPTION=--no-cache alpine-docker
 
 alpine: alpine-docker
-	docker run -w /tmp3 -v $$PWD:/tmp3/base --rm -it $(DOCKER_IMAGE) $(DOCKER_RUN_OPTION) /bin/ash -c \
+	docker run -w /tmp3 -v $$PWD:/tmp3/base --rm --platform $(DOCKER_PLATFORM) -it $(DOCKER_IMAGE) $(DOCKER_RUN_OPTION) /bin/ash -c \
 	  "ln -s base/Makefile Makefile; \
 	   ln -s base/bin bin; \
 	   ln -s base/lib lib; \
@@ -58,7 +59,7 @@ alpine: alpine-docker
 	   chown -R u:u .; \
 	   sudo -u u /bin/ash -i"
 linux-build: alpine-docker
-	docker run -w /tmp3 -v $$PWD:/tmp3/base --rm -i $(DOCKER_IMAGE) $(DOCKER_RUN_OPTION) /bin/ash -c \
+	docker run -w /tmp3 -v $$PWD:/tmp3/base --rm --platform $(DOCKER_PLATFORM)  -i $(DOCKER_IMAGE) $(DOCKER_RUN_OPTION) /bin/ash -c \
 	  "ln -s base/Makefile Makefile; \
 	   ln -s base/bin bin; \
 	   ln -s base/lib lib; \
@@ -68,10 +69,10 @@ linux-build: alpine-docker
 	   addgroup -g $(GROUP_ID) u; \
 	   usermod -g $(GROUP_ID) u; \
 	   chown -R u:u .; \
-	   sudo -u u make"
+	   make"
 # ubuntu for testing environment. try not to copy bin to the environment.
 ubuntu:
-	docker run -w /tmp2 -v $$PWD:/tmp2/base --rm -it ubuntu:16.04 $(DOCKER_RUN_OPTION) /bin/bash -c \
+	docker run -w /tmp2 -v $$PWD:/tmp2/base --rm --platform $(DOCKER_PLATFORM)  -it ubuntu:16.04 $(DOCKER_RUN_OPTION) /bin/bash -c \
 	  "apt-get update -y; \
            apt-get install -y sudo make git bzip2; \
 	   ln -s base/Makefile Makefile; \
@@ -200,8 +201,9 @@ clean:
 	rm -rf quicklisp
 	rm -f *.o
 	rm -f linkage-table-prelink-info-override.c
+	rm -f $(TARGET)
 
-archive: lib/commit
+archive: lib/commit $(TARGET)
 	mkdir $(ARCHIVE)
 	mkdir $(ARCHIVE)/bin
 	mkdir $(ARCHIVE)/lib

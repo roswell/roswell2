@@ -30,17 +30,3 @@ jobs:
         with:
           name: ${{ matrix.target == 'arm64' && 'roswell-osx-arm64' || 'roswell-osx' }}
           path: ./*.tbz
-  build-arm64-linux:
-    runs-on: macos-14
-    strategy:
-      fail-fast: false
-    steps:
-      - uses: actions/checkout@v4
-      - name: build
-        run: |
-          make linux-build archive
-      - name: upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: roswell-linux-arm64
-          path: ./*.tbz
