@@ -21,7 +21,7 @@ lisp run -L sbcl
 lisp run -L sbcl -Q
 
 # launch windows sbcl using wine.(quit immediately because --repl is not specified)
-lisp run -L sbcl --version 2.3.11 --os windows --wrap wine --eval "(print *features*)"
+lisp run -L sbcl --version 2.3.11 --os windows --arch x86-64 --wrap wine --eval "(print *features*)"
 
 # launch sbcl and print message and launch repl after eval.
 lisp run -L sbcl --eval '(print "hello world")' --repl
